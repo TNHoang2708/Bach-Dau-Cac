@@ -3,6 +3,7 @@ import TrangChu from './pages/TrangChu'
 import DinhDuong from './pages/DinhDuong'
 import BMI from './pages/BMI'
 import DangNhap from './pages/DangNhap'
+import NhatKy from './pages/NhatKy'
 import { useAuth } from './context/AuthContext'
 import './App.css'
 
@@ -29,6 +30,9 @@ function App() {
         <Link to="/bmi" className={location.pathname === '/bmi' ? 'active' : ''}>
           ⚖️ BMI
         </Link>
+        <Link to="/nhat-ky" className={location.pathname === '/nhat-ky' ? 'active' : ''}>
+          📝 Nhật ký
+        </Link>
         <button
           onClick={dangXuat}
           style={{
@@ -49,6 +53,7 @@ function App() {
         <Route path="/" element={<TrangChu />} />
         <Route path="/dinh-duong" element={<DinhDuong />} />
         <Route path="/bmi" element={<BMI />} />
+        <Route path="/nhat-ky" element={<NhatKy />} />
         <Route path="*" element={<Navigate to="/" />} />
       </Routes>
     </div>
