@@ -319,3 +319,75 @@ button:hover {
   color: var(--text-secondary);
   gap: 16px;
 }
+
+/* RESPONSIVE MOBILE */
+@media (max-width: 600px) {
+  body {
+    padding: 1.5rem 0.75rem;
+  }
+
+  .header h1 {
+    font-size: 24px;
+  }
+
+  .header p {
+    font-size: 13px;
+  }
+
+  .header {
+    margin-bottom: 1.5rem;
+    padding-right: 48px;
+  }
+
+  /* Nav cuộn ngang */
+  .nav {
+    overflow-x: auto;
+    flex-wrap: nowrap;
+    padding-bottom: 4px;
+    gap: 6px;
+    scrollbar-width: none;
+  }
+
+  .nav::-webkit-scrollbar {
+    display: none;
+  }
+
+  .nav a {
+    white-space: nowrap;
+    padding: 8px 14px;
+    font-size: 13px;
+    flex-shrink: 0;
+  }
+
+  .card {
+    padding: 1.25rem;
+  }
+
+  /* Form 1 cột trên mobile */
+  .form-grid {
+    grid-template-columns: 1fr !important;
+  }
+
+  /* Goal 2 cột trên mobile */
+  .goal-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  .goal-card strong {
+    font-size: 13px;
+  }
+
+  .goal-desc {
+    font-size: 10px;
+  }
+
+  button {
+    font-size: 14px;
+    padding: 14px;
+  }
+
+  .ketqua {
+    padding: 1.25rem;
+    font-size: 14px;
+  }
+}
