@@ -391,3 +391,8 @@ button:hover {
     font-size: 14px;
   }
 }
+
+body:has(#landing) {
+  padding: 0 !important;
+  overflow: hidden !important;
+}

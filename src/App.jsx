@@ -4,6 +4,7 @@ import DinhDuong from './pages/DinhDuong'
 import BMI from './pages/BMI'
 import DangNhap from './pages/DangNhap'
 import NhatKy from './pages/NhatKy'
+import LandingPage from './pages/LandingPage'
 import { useAuth } from './context/AuthContext'
 import { useState } from 'react'
 import { Dumbbell, Salad, Scale, BookOpen } from 'lucide-react'
@@ -13,8 +14,13 @@ function App() {
   const location = useLocation()
   const { user, dangXuat } = useAuth()
   const [showMenu, setShowMenu] = useState(false)
+  const [showLogin, setShowLogin] = useState(false)
 
-  if (!user) return <DangNhap />
+  // Chưa đăng nhập → Landing page hoặc trang đăng nhập
+  if (!user) {
+    if (showLogin) return <DangNhap />
+    return <LandingPage onGetStarted={() => setShowLogin(true)} />
+  }
 
   const navItems = [
     { to: '/', icon: <Dumbbell size={16} />, label: 'Lịch tập' },
