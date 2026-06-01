@@ -6,20 +6,31 @@ import DangNhap from './pages/DangNhap'
 import NhatKy from './pages/NhatKy'
 import LandingPage from './pages/LandingPage'
 import { useAuth } from './context/AuthContext'
-import { useState } from 'react'
-import { Dumbbell, Salad, Scale, BookOpen } from 'lucide-react'
+import { useState, useEffect } from 'react'
+import { Dumbbell, Salad, Scale, BookOpen, LogOut } from 'lucide-react'
 import './App.css'
 
 function App() {
   const location = useLocation()
   const { user, dangXuat } = useAuth()
   const [showMenu, setShowMenu] = useState(false)
+  useEffect(() => {
+    const handleClickOutside = (e) => {
+      if (!e.target.closest('#user-menu')) setShowMenu(false)
+    }
+    document.addEventListener('mousedown', handleClickOutside)
+    return () => document.removeEventListener('mousedown', handleClickOutside)
+  }, [])
   const [showLogin, setShowLogin] = useState(false)
 
   // Chưa đăng nhập → Landing page hoặc trang đăng nhập
   if (!user) {
-    if (showLogin) return <DangNhap />
-    return <LandingPage onGetStarted={() => setShowLogin(true)} />
+    if (showLogin) return <DangNhap onBack={() => setShowLogin(false)} />
+    return (
+      <div style={{ margin: 0, padding: 0, width: '100%' }}>
+        <LandingPage onGetStarted={() => setShowLogin(true)} />
+      </div>
+    )
   }
 
   const navItems = [
@@ -35,7 +46,7 @@ function App() {
         <h1>💪 Gym Planner AI</h1>
         <p>Nhập thông tin để nhận lịch tập cá nhân hóa bằng AI</p>
 
-        <div style={{ position: 'absolute', top: 0, right: 0 }}>
+        <div id="user-menu" style={{ position: 'absolute', top: 0, right: 0 }}>
           <img
             src={user.photoURL || `https://ui-avatars.com/api/?name=${user.email}&background=00d4a0&color=000`}
             alt="avatar"
@@ -78,7 +89,7 @@ function App() {
                   borderRadius: '8px'
                 }}
               >
-                🚪 Đăng xuất
+                <LogOut size={14} /> Đăng xuất
               </button>
             </div>
           )}

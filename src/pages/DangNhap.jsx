@@ -5,8 +5,9 @@ import {
     signInWithEmailAndPassword,
     signInWithPopup
 } from 'firebase/auth'
+import { Dumbbell, ArrowLeft, LogIn, UserPlus, Loader } from 'lucide-react'
 
-function DangNhap() {
+function DangNhap({ onBack }) {
     const [isLogin, setIsLogin] = useState(true)
     const [email, setEmail] = useState('')
     const [matKhau, setMatKhau] = useState('')
@@ -14,18 +15,11 @@ function DangNhap() {
     const [loi, setLoi] = useState('')
 
     const handleEmail = async () => {
-        if (!email || !matKhau) {
-            setLoi('Vui lòng nhập đầy đủ thông tin!')
-            return
-        }
-        setLoading(true)
-        setLoi('')
+        if (!email || !matKhau) { setLoi('Vui lòng nhập đầy đủ thông tin!'); return }
+        setLoading(true); setLoi('')
         try {
-            if (isLogin) {
-                await signInWithEmailAndPassword(auth, email, matKhau)
-            } else {
-                await createUserWithEmailAndPassword(auth, email, matKhau)
-            }
+            if (isLogin) await signInWithEmailAndPassword(auth, email, matKhau)
+            else await createUserWithEmailAndPassword(auth, email, matKhau)
         } catch (err) {
             if (err.code === 'auth/invalid-credential') setLoi('Email hoặc mật khẩu không đúng!')
             else if (err.code === 'auth/email-already-in-use') setLoi('Email này đã được đăng ký!')
@@ -37,153 +31,163 @@ function DangNhap() {
     }
 
     const handleGoogle = async () => {
-        setLoading(true)
-        setLoi('')
-        try {
-            await signInWithPopup(auth, googleProvider)
-        } catch (err) {
-            setLoi('Đăng nhập Google thất bại, thử lại nhé!')
-        }
+        setLoading(true); setLoi('')
+        try { await signInWithPopup(auth, googleProvider) }
+        catch (err) { setLoi('Đăng nhập Google thất bại, thử lại nhé!') }
         setLoading(false)
     }
 
     return (
         <div style={{
-            minHeight: '80vh',
+            minHeight: '100vh',
             display: 'flex',
             alignItems: 'center',
-            justifyContent: 'center'
+            justifyContent: 'center',
+            background: '#080808',
+            position: 'relative',
+            padding: '2rem',
         }}>
+            {/* Nút quay lại */}
+            {onBack && (
+                <button
+                    onClick={onBack}
+                    style={{
+                        position: 'fixed',
+                        top: '1.5rem',
+                        left: '1.5rem',
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: '8px',
+                        padding: '10px 18px',
+                        background: 'rgba(255,255,255,0.05)',
+                        border: '1px solid rgba(255,255,255,0.12)',
+                        borderRadius: '8px',
+                        color: 'rgba(255,255,255,0.7)',
+                        fontSize: '14px',
+                        fontWeight: '600',
+                        cursor: 'pointer',
+                        width: 'auto',
+                        transition: 'all 0.2s ease',
+                        zIndex: 100,
+                    }}
+                    onMouseEnter={e => { e.currentTarget.style.borderColor = '#00d4a0'; e.currentTarget.style.color = '#00d4a0' }}
+                    onMouseLeave={e => { e.currentTarget.style.borderColor = 'rgba(255,255,255,0.12)'; e.currentTarget.style.color = 'rgba(255,255,255,0.7)' }}
+                >
+                    <ArrowLeft size={16} /> Quay lại
+                </button>
+            )}
+
+            {/* Card */}
             <div style={{
-                background: 'var(--card)',
-                border: '1px solid var(--border)',
+                background: '#111111',
+                border: '1px solid #2a2a2a',
                 borderRadius: '20px',
                 padding: '2.5rem',
                 width: '100%',
-                maxWidth: '420px'
+                maxWidth: '420px',
             }}>
                 {/* Logo */}
                 <div style={{ textAlign: 'center', marginBottom: '2rem' }}>
-                    <div style={{ fontSize: '48px', marginBottom: '8px' }}>💪</div>
+                    <div style={{
+                        width: '56px', height: '56px',
+                        background: 'rgba(0,212,160,0.1)',
+                        border: '1px solid rgba(0,212,160,0.25)',
+                        borderRadius: '14px',
+                        display: 'flex', alignItems: 'center', justifyContent: 'center',
+                        margin: '0 auto 12px',
+                    }}>
+                        <Dumbbell size={26} color='#00d4a0' />
+                    </div>
                     <h2 style={{
-                        fontSize: '24px',
-                        fontWeight: '700',
-                        background: 'linear-gradient(135deg, #fff 0%, var(--accent) 100%)',
-                        WebkitBackgroundClip: 'text',
-                        WebkitTextFillColor: 'transparent',
+                        fontSize: '22px', fontWeight: '700',
+                        background: 'linear-gradient(135deg, #fff 0%, #00d4a0 100%)',
+                        WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent',
                         marginBottom: '4px'
                     }}>Gym Planner AI</h2>
-                    <p style={{ color: 'var(--text-secondary)', fontSize: '14px' }}>
+                    <p style={{ color: '#aaa', fontSize: '14px' }}>
                         {isLogin ? 'Đăng nhập để tiếp tục' : 'Tạo tài khoản mới'}
                     </p>
                 </div>
 
-                {/* Tab chọn */}
+                {/* Tab */}
                 <div style={{
-                    display: 'grid',
-                    gridTemplateColumns: '1fr 1fr',
-                    gap: '8px',
-                    marginBottom: '1.5rem',
-                    background: 'var(--card2)',
-                    padding: '4px',
-                    borderRadius: '12px'
+                    display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '6px',
+                    background: '#1a1a1a', padding: '4px', borderRadius: '12px',
+                    marginBottom: '1.5rem'
                 }}>
-                    {['Đăng nhập', 'Đăng ký'].map((tab, i) => (
-                        <button
-                            key={i}
-                            onClick={() => { setIsLogin(i === 0); setLoi('') }}
-                            style={{
-                                padding: '10px',
-                                background: isLogin === (i === 0) ? 'var(--accent)' : 'transparent',
-                                color: isLogin === (i === 0) ? '#000' : 'var(--text-secondary)',
-                                borderRadius: '10px',
-                                fontSize: '14px',
-                                fontWeight: '600',
-                                margin: 0
-                            }}
-                        >
-                            {tab}
+                    {[
+                        { label: 'Đăng nhập', icon: <LogIn size={14} />, val: true },
+                        { label: 'Đăng ký', icon: <UserPlus size={14} />, val: false },
+                    ].map((tab, i) => (
+                        <button key={i} onClick={() => { setIsLogin(tab.val); setLoi('') }} style={{
+                            padding: '10px', margin: 0,
+                            background: isLogin === tab.val ? '#00d4a0' : 'transparent',
+                            color: isLogin === tab.val ? '#000' : '#aaa',
+                            borderRadius: '10px', fontSize: '14px', fontWeight: '600',
+                            display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px',
+                            width: '100%', border: 'none', cursor: 'pointer',
+                            transition: 'all 0.2s',
+                        }}>
+                            {tab.icon} {tab.label}
                         </button>
                     ))}
                 </div>
 
                 {/* Form */}
                 <div style={{ marginBottom: '1rem' }}>
-                    <label style={{ fontSize: '13px', color: 'var(--text-secondary)', display: 'block', marginBottom: '6px' }}>
-                        Email
-                    </label>
-                    <input
-                        type="email"
-                        placeholder="example@gmail.com"
-                        value={email}
+                    <label style={{ fontSize: '13px', color: '#aaa', display: 'block', marginBottom: '6px' }}>Email</label>
+                    <input type="email" placeholder="example@gmail.com" value={email}
                         onChange={e => setEmail(e.target.value)}
-                        onKeyDown={e => e.key === 'Enter' && handleEmail()}
-                    />
+                        onKeyDown={e => e.key === 'Enter' && handleEmail()} />
                 </div>
-
                 <div style={{ marginBottom: '1.5rem' }}>
-                    <label style={{ fontSize: '13px', color: 'var(--text-secondary)', display: 'block', marginBottom: '6px' }}>
-                        Mật khẩu
-                    </label>
-                    <input
-                        type="password"
-                        placeholder="Tối thiểu 6 ký tự"
-                        value={matKhau}
+                    <label style={{ fontSize: '13px', color: '#aaa', display: 'block', marginBottom: '6px' }}>Mật khẩu</label>
+                    <input type="password" placeholder="Tối thiểu 6 ký tự" value={matKhau}
                         onChange={e => setMatKhau(e.target.value)}
-                        onKeyDown={e => e.key === 'Enter' && handleEmail()}
-                    />
+                        onKeyDown={e => e.key === 'Enter' && handleEmail()} />
                 </div>
 
                 {/* Lỗi */}
                 {loi && (
                     <div style={{
-                        background: 'rgba(239, 68, 68, 0.1)',
-                        border: '1px solid rgba(239, 68, 68, 0.3)',
-                        borderRadius: '10px',
-                        padding: '10px 14px',
-                        marginBottom: '1rem',
-                        fontSize: '13px',
-                        color: '#ef4444'
+                        background: 'rgba(239,68,68,0.1)', border: '1px solid rgba(239,68,68,0.3)',
+                        borderRadius: '10px', padding: '10px 14px', marginBottom: '1rem',
+                        fontSize: '13px', color: '#ef4444', display: 'flex', alignItems: 'center', gap: '8px'
                     }}>
                         ⚠️ {loi}
                     </div>
                 )}
 
-                {/* Nút đăng nhập */}
-                <button
-                    onClick={handleEmail}
-                    disabled={loading}
-                    style={{ marginBottom: '12px', opacity: loading ? 0.7 : 1 }}
-                >
-                    {loading ? '⏳ Đang xử lý...' : isLogin ? '🔑 Đăng nhập' : '✨ Tạo tài khoản'}
+                {/* Nút đăng nhập/đăng ký */}
+                <button onClick={handleEmail} disabled={loading} style={{
+                    marginBottom: '12px', opacity: loading ? 0.7 : 1,
+                    display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px',
+                    width: '100%',
+                }}>
+                    {loading
+                        ? <><Loader size={16} style={{ animation: 'spin 1s linear infinite' }} /> Đang xử lý...</>
+                        : isLogin
+                            ? <><LogIn size={16} /> Đăng nhập</>
+                            : <><UserPlus size={16} /> Tạo tài khoản</>
+                    }
                 </button>
 
                 {/* Divider */}
-                <div style={{
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: '12px',
-                    marginBottom: '12px'
-                }}>
-                    <div style={{ flex: 1, height: '1px', background: 'var(--border)' }} />
-                    <span style={{ fontSize: '12px', color: 'var(--text-secondary)' }}>hoặc</span>
-                    <div style={{ flex: 1, height: '1px', background: 'var(--border)' }} />
+                <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '12px' }}>
+                    <div style={{ flex: 1, height: '1px', background: '#2a2a2a' }} />
+                    <span style={{ fontSize: '12px', color: '#aaa' }}>hoặc</span>
+                    <div style={{ flex: 1, height: '1px', background: '#2a2a2a' }} />
                 </div>
 
                 {/* Google */}
-                <button
-                    onClick={handleGoogle}
-                    disabled={loading}
-                    style={{
-                        background: 'var(--card2)',
-                        color: 'var(--text)',
-                        border: '1px solid var(--border)',
-                        display: 'flex',
-                        alignItems: 'center',
-                        justifyContent: 'center',
-                        gap: '10px',
-                        opacity: loading ? 0.7 : 1
-                    }}
+                <button onClick={handleGoogle} disabled={loading} style={{
+                    background: '#1a1a1a', color: '#fff', border: '1px solid #2a2a2a',
+                    display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '10px',
+                    opacity: loading ? 0.7 : 1, width: '100%',
+                    transition: 'border-color 0.2s',
+                }}
+                    onMouseEnter={e => e.currentTarget.style.borderColor = '#00d4a0'}
+                    onMouseLeave={e => e.currentTarget.style.borderColor = '#2a2a2a'}
                 >
                     <svg width="18" height="18" viewBox="0 0 48 48">
                         <path fill="#EA4335" d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.72 17.74 9.5 24 9.5z" />
@@ -194,6 +198,10 @@ function DangNhap() {
                     Đăng nhập bằng Google
                 </button>
             </div>
+
+            <style>{`
+                @keyframes spin { to { transform: rotate(360deg); } }
+            `}</style>
         </div>
     )
 }

@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react'
+import { Camera, Search, ClipboardList, UtensilsCrossed } from 'lucide-react'
 
 function DinhDuong() {
     const [anh, setAnh] = useState(null)
@@ -122,7 +123,7 @@ Trả lời bằng tiếng Việt, rõ ràng và dễ đọc.` },
     return (
         <div>
             <div className="card">
-                <div className="card-title">📸 Phân tích bữa ăn</div>
+                <div className="card-title" style={{ display: 'flex', alignItems: 'center', gap: '8px' }}><Camera size={16} /> Phân tích bữa ăn</div>
 
                 <div
                     className="upload-zone"
@@ -132,7 +133,7 @@ Trả lời bằng tiếng Việt, rõ ràng và dễ đọc.` },
                         ? <img src={preview} alt="preview" style={{ width: '100%', borderRadius: '12px' }} />
                         : (
                             <div className="upload-placeholder">
-                                <span style={{ fontSize: '40px' }}>📷</span>
+                                <Camera size={40} color='#aaa' />
                                 <p>Click để chọn ảnh hoặc <strong>Ctrl+V</strong> để paste</p>
                             </div>
                         )
@@ -148,7 +149,7 @@ Trả lời bằng tiếng Việt, rõ ràng và dễ đọc.` },
                 />
 
                 <button style={{ marginTop: '16px' }} onClick={phanTich}>
-                    🔍 Phân tích dinh dưỡng
+                    <Search size={16} /> Phân tích dinh dưỡng
                 </button>
 
                 {loading && (
@@ -177,7 +178,7 @@ Trả lời bằng tiếng Việt, rõ ràng và dễ đọc.` },
             )}
             {lichSu.length > 0 && (
                 <div className="card" style={{ marginTop: '1.5rem' }}>
-                    <div className="card-title">📋 Lịch sử bữa ăn</div>
+                    <div className="card-title" style={{ display: 'flex', alignItems: 'center', gap: '8px' }}><ClipboardList size={16} /> Lịch sử bữa ăn</div>
                     {lichSu.map((buoi) => (
                         <div key={buoi.id} className="lichsu-item" onClick={() => {
                             setKetQua('')
@@ -191,7 +192,7 @@ Trả lời bằng tiếng Việt, rõ ràng và dễ đọc.` },
                                 {buoi.preview && (
                                     <img src={buoi.preview} alt="" style={{ width: '48px', height: '48px', borderRadius: '8px', objectFit: 'cover' }} />
                                 )}
-                                <span>🍽️ {buoi.thoiGian}</span>
+                                <span style={{ display: 'flex', alignItems: 'center', gap: '6px' }}><UtensilsCrossed size={14} /> {buoi.thoiGian}</span>
                             </div>
                             <span className="lichsu-xem">Xem lại →</span>
                         </div>
