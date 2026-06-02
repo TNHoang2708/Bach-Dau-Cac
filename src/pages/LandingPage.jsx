@@ -69,12 +69,39 @@ function LandingPage({ onGetStarted }) {
             `}</style>
 
             {/* NAVBAR */}
-            <nav style={{ position: 'fixed', top: 0, left: 0, right: 0, display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '1.25rem 5rem', background: scrollY > 50 ? 'rgba(8,8,8,0.95)' : 'transparent', borderBottom: scrollY > 50 ? '1px solid rgba(255,255,255,0.06)' : 'none', backdropFilter: scrollY > 50 ? 'blur(20px)' : 'none', transition: 'all 0.4s ease', zIndex: 1000 }}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+            <nav style={{ position: 'fixed', top: 0, left: 0, right: 0, display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '1rem 3rem', background: scrollY > 50 ? 'rgba(8,8,8,0.95)' : 'transparent', borderBottom: scrollY > 50 ? '1px solid rgba(255,255,255,0.06)' : 'none', backdropFilter: scrollY > 50 ? 'blur(20px)' : 'none', transition: 'all 0.4s ease', zIndex: 1000 }}>
+
+                {/* Logo */}
+                <div style={{ display: 'flex', alignItems: 'center', gap: '10px', flexShrink: 0 }}>
                     <Dumbbell size={22} color='#00d4a0' strokeWidth={2.5} />
                     <span style={{ fontWeight: '900', fontSize: '18px', letterSpacing: '0.05em', textTransform: 'uppercase' }}>Gym Planner AI</span>
                 </div>
-                <button className="btn-ghost" onClick={onGetStarted}>Đăng nhập <ChevronRight size={14} /></button>
+
+                {/* Menu items — tự căn đều, thêm bao nhiêu cũng được */}
+                <div style={{ display: 'flex', alignItems: 'center', gap: '2rem', position: 'absolute', left: '50%', transform: 'translateX(-50%)' }}>
+                    {[
+                        { label: 'Trang chủ' },
+                        { label: 'Tính năng' },
+                        { label: 'Dinh dưỡng' },
+                        { label: 'Lịch tập' },
+                        { label: 'Về chúng tôi' },
+                    ].map((item, i) => (
+                        <span key={i} style={{ fontSize: '14px', fontWeight: '600', color: 'rgba(255,255,255,0.7)', cursor: 'pointer', letterSpacing: '0.02em', transition: 'color 0.2s', fontFamily: "'Barlow', sans-serif" }}
+                            onMouseEnter={e => e.currentTarget.style.color = '#00d4a0'}
+                            onMouseLeave={e => e.currentTarget.style.color = 'rgba(255,255,255,0.7)'}
+                        >{item.label}</span>
+                    ))}
+                </div>
+
+                {/* Sign In/ Sign Up */}
+                <div style={{ display: 'flex', alignItems: 'center', gap: '10px', flexShrink: 0 }}>
+                    <button className="btn-ghost" onClick={onGetStarted}>
+                        Log in
+                    </button>
+                    <button className="btn-primary" onClick={onGetStarted} style={{ padding: '10px 20px', fontSize: '14px' }}>
+                        Sign up
+                    </button>
+                </div>
             </nav>
 
             {/* HERO */}
@@ -86,9 +113,6 @@ function LandingPage({ onGetStarted }) {
                 <div style={{ position: 'absolute', left: 0, top: '20%', bottom: '20%', width: '3px', background: 'linear-gradient(to bottom, transparent, #00d4a0, transparent)' }} />
 
                 <div style={{ position: 'relative', zIndex: 1, maxWidth: '680px' }}>
-                    <div style={{ display: 'inline-flex', alignItems: 'center', gap: '8px', background: 'rgba(0,212,160,0.1)', border: '1px solid rgba(0,212,160,0.25)', borderRadius: '2px', padding: '6px 14px', fontSize: '11px', color: '#00d4a0', fontWeight: '700', letterSpacing: '0.15em', textTransform: 'uppercase', marginBottom: '2rem', animation: 'fadeInUp 0.8s ease both' }}>
-                        <Zap size={11} fill="#00d4a0" strokeWidth={0} /> Powered by Gemini AI
-                    </div>
                     <h1 style={{ fontSize: 'clamp(52px, 7vw, 96px)', fontWeight: '900', lineHeight: 0.95, letterSpacing: '-1px', textTransform: 'uppercase', marginBottom: '1.75rem', animation: 'fadeInUp 0.8s ease 0.1s both' }}>
                         SHAPE YOUR<br /><span style={{ color: '#00d4a0' }}>BODY</span><br />WITH AI
                     </h1>
@@ -148,7 +172,7 @@ function LandingPage({ onGetStarted }) {
                         ĐƠN GIẢN. <span style={{ color: '#00d4a0' }}>THÔNG MINH.</span> HIỆU QUẢ.
                     </h2>
                 </div>
-                <div className="why-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '16px', maxWidth: '960px' }}>
+                <div className="why-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(260px, 1fr))', gap: '16px' }}>
                     {[
                         { icon: <Zap size={28} />, title: 'Nhanh chóng', desc: 'Chụp ảnh bữa ăn — có kết quả dinh dưỡng trong vài giây', tag: 'AI' },
                         { icon: <TrendingUp size={28} />, title: 'Theo dõi tiến trình', desc: 'Nhật ký tập luyện giúp bạn thấy rõ sự tiến bộ theo từng tuần', tag: 'Smart' },
@@ -172,19 +196,80 @@ function LandingPage({ onGetStarted }) {
                 <div style={{ position: 'absolute', inset: 0, background: 'rgba(8,8,8,0.7)' }} />
                 <div ref={setRef('cta')} style={{ position: 'relative', zIndex: 1, ...anim('cta') }}>
                     <p style={{ color: '#00d4a0', fontWeight: '700', fontSize: '12px', textTransform: 'uppercase', letterSpacing: '0.15em', marginBottom: '1.5rem' }}>Sẵn sàng chưa?</p>
-                    <h2 style={{ fontSize: 'clamp(40px, 6vw, 80px)', fontWeight: '900', letterSpacing: '-2px', textTransform: 'uppercase', lineHeight: 0.95, marginBottom: '1.5rem' }}>SẴN SÀNG<br /><span style={{ color: '#00d4a0' }}>BỨT GIỚI HẠN?</span></h2>
+                    <h2 style={{ fontSize: 'clamp(20px, 2.5vw, 36px)', fontWeight: '900', letterSpacing: '-1px', textTransform: 'uppercase', lineHeight: 1 }}>SẴN SÀNG<br /><span style={{ color: '#00d4a0' }}>BỨT GIỚI HẠN?</span></h2>
                     <p style={{ fontFamily: "'Barlow', sans-serif", color: 'rgba(255,255,255,0.45)', fontSize: '17px', marginBottom: '3rem' }}>Miễn phí hoàn toàn. Không cần thẻ tín dụng.</p>
                     <button className="btn-primary" onClick={onGetStarted} style={{ fontSize: '17px', padding: '18px 56px' }}><Zap size={17} fill="#000" strokeWidth={0} /> Bắt đầu ngay</button>
                 </div>
             </section>
 
             {/* FOOTER */}
-            <footer style={{ padding: '2rem 5rem', borderTop: '1px solid rgba(255,255,255,0.06)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                    <Dumbbell size={16} color='#00d4a0' />
-                    <span style={{ fontSize: '13px', color: 'rgba(255,255,255,0.3)' }}>© 2025 Gym Planner AI</span>
+            <footer style={{ padding: '4rem 5rem 2rem', borderTop: '1px solid rgba(255,255,255,0.06)', background: '#080808' }}>
+                <div style={{ display: 'grid', gridTemplateColumns: '1.5fr repeat(4, 1fr)', gap: '3rem', marginBottom: '3rem' }}>
+
+                    {/* Logo + desc + social */}
+                    <div>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '1rem' }}>
+                            <Dumbbell size={20} color='#00d4a0' />
+                            <span style={{ fontWeight: '900', fontSize: '16px', textTransform: 'uppercase' }}>Gym Planner AI</span>
+                        </div>
+                        <p style={{ fontSize: '13px', fontFamily: "'Barlow', sans-serif", color: 'rgba(255,255,255,0.4)', lineHeight: 1.7, marginBottom: '1.5rem' }}>
+                            Ứng dụng tập luyện thông minh — cá nhân hóa lịch tập và phân tích dinh dưỡng bằng AI.
+                        </p>
+                        <div style={{ display: 'flex', gap: '12px' }}>
+                            {['IG', 'TK', 'FB', 'YT'].map((s, i) => (
+                                <div key={i} style={{ width: '34px', height: '34px', borderRadius: '8px', border: '1px solid rgba(255,255,255,0.1)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '11px', fontWeight: '700', color: 'rgba(255,255,255,0.4)', cursor: 'pointer', transition: 'all 0.2s' }}
+                                    onMouseEnter={e => { e.currentTarget.style.borderColor = '#00d4a0'; e.currentTarget.style.color = '#00d4a0' }}
+                                    onMouseLeave={e => { e.currentTarget.style.borderColor = 'rgba(255,255,255,0.1)'; e.currentTarget.style.color = 'rgba(255,255,255,0.4)' }}
+                                >{s}</div>
+                            ))}
+                        </div>
+                    </div>
+
+                    {/* Các cột links */}
+                    {[
+                        {
+                            title: 'Sản phẩm',
+                            links: ['Tính năng', 'Lịch tập AI', 'Dinh dưỡng', 'Nhật ký', 'Tính BMI']
+                        },
+                        {
+                            title: 'Công ty',
+                            links: ['Về chúng tôi', 'Liên hệ', 'Tuyển dụng', 'Blog']
+                        },
+                        {
+                            title: 'Tài nguyên',
+                            links: ['Hướng dẫn', 'Bài viết', 'Thư viện bài tập', 'API công khai']
+                        },
+                        {
+                            title: 'Hướng dẫn tập',
+                            links: ['Tăng cơ', 'Giảm mỡ', 'Tăng sức bền', 'Lịch 3 ngày', 'Lịch 5 ngày']
+                        },
+                    ].map((col, i) => (
+                        <div key={i}>
+                            <div style={{ fontSize: '13px', fontWeight: '700', textTransform: 'uppercase', letterSpacing: '0.08em', color: '#fff', marginBottom: '1rem' }}>{col.title}</div>
+                            {col.links.map((link, j) => (
+                                <div key={j} style={{ fontSize: '13px', fontFamily: "'Barlow', sans-serif", color: 'rgba(255,255,255,0.4)', marginBottom: '10px', cursor: 'pointer', transition: 'color 0.2s' }}
+                                    onMouseEnter={e => e.currentTarget.style.color = '#00d4a0'}
+                                    onMouseLeave={e => e.currentTarget.style.color = 'rgba(255,255,255,0.4)'}
+                                >{link}</div>
+                            ))}
+                        </div>
+                    ))}
                 </div>
-                <span style={{ fontSize: '12px', color: 'rgba(255,255,255,0.2)', fontFamily: "'Barlow', sans-serif" }}>Powered by Gemini AI</span>
+
+                {/* Bottom bar */}
+                <div style={{ borderTop: '1px solid rgba(255,255,255,0.06)', paddingTop: '1.5rem', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '1rem' }}>
+                    <span style={{ fontSize: '12px', fontFamily: "'Barlow', sans-serif", color: 'rgba(255,255,255,0.25)' }}>
+                        © 2025 Gym Planner AI. All rights reserved.
+                    </span>
+                    <div style={{ display: 'flex', gap: '1.5rem' }}>
+                        {['Điều khoản', 'Bảo mật', 'Cookie'].map((item, i) => (
+                            <span key={i} style={{ fontSize: '12px', fontFamily: "'Barlow', sans-serif", color: 'rgba(255,255,255,0.25)', cursor: 'pointer', transition: 'color 0.2s' }}
+                                onMouseEnter={e => e.currentTarget.style.color = '#fff'}
+                                onMouseLeave={e => e.currentTarget.style.color = 'rgba(255,255,255,0.25)'}
+                            >{item}</span>
+                        ))}
+                    </div>
+                </div>
             </footer>
         </div>
     )
