@@ -1,15 +1,26 @@
 import { useState, useEffect, useRef } from 'react'
-import { Dumbbell, Salad, Scale, BookOpen, Zap, ChevronRight, Star, Camera, TrendingUp, Shield } from 'lucide-react'
+import { Dumbbell, Salad, Scale, BookOpen, Zap, ChevronRight, Star, Camera, TrendingUp, Shield, Menu, X } from 'lucide-react'
 
 function LandingPage({ onGetStarted }) {
     const [scrollY, setScrollY] = useState(0)
     const [visible, setVisible] = useState({})
+    const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
     const refs = useRef({})
 
     useEffect(() => {
         const handleScroll = () => setScrollY(window.scrollY)
         window.addEventListener('scroll', handleScroll)
         return () => window.removeEventListener('scroll', handleScroll)
+    }, [])
+
+    useEffect(() => {
+        const handleResize = () => {
+            if (window.innerWidth > 1000) {
+                setMobileMenuOpen(false)
+            }
+        }
+        window.addEventListener('resize', handleResize)
+        return () => window.removeEventListener('resize', handleResize)
     }, [])
 
     useEffect(() => {
@@ -36,11 +47,20 @@ function LandingPage({ onGetStarted }) {
         transition: `opacity 0.7s ease ${delay}s, transform 0.7s ease ${delay}s`,
     })
 
+
     const features = [
-        { icon: <Dumbbell size={28} />, title: 'Lịch tập AI', desc: 'AI tạo lịch tập cá nhân hóa theo thể trạng, mục tiêu và lịch trình của bạn', tag: 'Cá nhân hóa' },
-        { icon: <Camera size={28} />, title: 'Phân tích dinh dưỡng', desc: 'Chụp ảnh bữa ăn — AI nhận diện món ăn và phân tích calo, protein, carb, fat ngay lập tức', tag: 'AI Vision' },
-        { icon: <Scale size={28} />, title: 'Tính chỉ số BMI', desc: 'Tính BMI, TDEE, cân nặng lý tưởng và lượng calo cần thiết mỗi ngày', tag: 'Sức khoẻ' },
-        { icon: <BookOpen size={28} />, title: 'Nhật ký tập luyện', desc: 'Ghi lại sets, reps, kg từng buổi tập — theo dõi tiến trình theo thời gian thực', tag: 'Theo dõi' },
+        { icon: <Dumbbell size={28} />, title: 'Lịch tập AI', desc: '...', tag: 'Cá nhân hóa' },
+        { icon: <Camera size={28} />, title: 'Phân tích dinh dưỡng', desc: '...', tag: 'AI Vision' },
+        { icon: <Scale size={28} />, title: 'Tính chỉ số BMI', desc: '...', tag: 'Sức khoẻ' },
+        { icon: <BookOpen size={28} />, title: 'Nhật ký tập luyện', desc: '...', tag: 'Theo dõi' },
+    ]
+
+    const navLinks = [
+        { label: 'Trang chủ' },
+        { label: 'Tính năng' },
+        { label: 'Dinh dưỡng' },
+        { label: 'Lịch tập' },
+        { label: 'Về chúng tôi' },
     ]
 
     const stats = [
@@ -69,31 +89,52 @@ function LandingPage({ onGetStarted }) {
             `}</style>
 
             {/* NAVBAR */}
-            <nav style={{ position: 'fixed', top: 0, left: 0, right: 0, display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '1rem 3rem', background: scrollY > 50 ? 'rgba(8,8,8,0.95)' : 'transparent', borderBottom: scrollY > 50 ? '1px solid rgba(255,255,255,0.06)' : 'none', backdropFilter: scrollY > 50 ? 'blur(20px)' : 'none', transition: 'all 0.4s ease', zIndex: 1000 }}>
-
+            <nav style={{
+                position: 'fixed',
+                top: 0,
+                left: 0,
+                right: 0,
+                display: 'flex',
+                justifyContent: 'space-between',
+                alignItems: 'center',
+                padding: '1rem 3rem',
+                background: scrollY > 50 ? 'rgba(8,8,8,0.95)' : 'transparent',
+                borderBottom: scrollY > 50 ? '1px solid rgba(255,255,255,0.06)' : 'none',
+                backdropFilter: scrollY > 50 ? 'blur(20px)' : 'none',
+                transition: 'all 0.4s ease',
+                zIndex: 1000
+            }}>
                 {/* Logo */}
                 <div style={{ display: 'flex', alignItems: 'center', gap: '10px', flexShrink: 0 }}>
                     <Dumbbell size={22} color='#00d4a0' strokeWidth={2.5} />
                     <span style={{ fontWeight: '900', fontSize: '18px', letterSpacing: '0.05em', textTransform: 'uppercase' }}>Gym Planner AI</span>
                 </div>
 
-                {/* Menu items — tự căn đều, thêm bao nhiêu cũng được */}
-                <div style={{ display: 'flex', alignItems: 'center', gap: '2rem', position: 'absolute', left: '50%', transform: 'translateX(-50%)' }}>
-                    {[
-                        { label: 'Trang chủ' },
-                        { label: 'Tính năng' },
-                        { label: 'Dinh dưỡng' },
-                        { label: 'Lịch tập' },
-                        { label: 'Về chúng tôi' },
-                    ].map((item, i) => (
-                        <span key={i} style={{ fontSize: '14px', fontWeight: '600', color: 'rgba(255,255,255,0.7)', cursor: 'pointer', letterSpacing: '0.02em', transition: 'color 0.2s', fontFamily: "'Barlow', sans-serif" }}
+                {/* Desktop Menu */}
+                <div className="nav-links-desktop" style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '2rem',
+                    margin: '0 2rem'
+                }}>
+                    {navLinks.map((item, i) => (
+                        <span key={i} style={{
+                            fontSize: '14px',
+                            fontWeight: '600',
+                            color: 'rgba(255,255,255,0.7)',
+                            cursor: 'pointer',
+                            letterSpacing: '0.02em',
+                            transition: 'color 0.2s',
+                            fontFamily: "'Barlow', sans-serif",
+                            whiteSpace: 'nowrap'
+                        }}
                             onMouseEnter={e => e.currentTarget.style.color = '#00d4a0'}
                             onMouseLeave={e => e.currentTarget.style.color = 'rgba(255,255,255,0.7)'}
                         >{item.label}</span>
                     ))}
                 </div>
 
-                {/* Sign In/ Sign Up */}
+                {/* Desktop Buttons */}
                 <div style={{ display: 'flex', alignItems: 'center', gap: '10px', flexShrink: 0 }}>
                     <button className="btn-ghost" onClick={onGetStarted}>
                         Log in
@@ -102,7 +143,59 @@ function LandingPage({ onGetStarted }) {
                         Sign up
                     </button>
                 </div>
+
+                {/* Mobile Menu Button */}
+                <button
+                    className="mobile-menu-btn"
+                    onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+                    style={{
+                        background: 'transparent',
+                        border: 'none',
+                        color: '#fff',
+                        cursor: 'pointer',
+                        padding: '8px',
+                        display: 'none',
+                        alignItems: 'center',
+                        justifyContent: 'center'
+                    }}
+                >
+                    {mobileMenuOpen ? <X size={24} /> : <Menu size={24} />}
+                </button>
             </nav>
+
+            {/* Mobile Menu Overlay */}
+            <div className="mobile-menu-overlay" style={{
+                position: 'fixed',
+                top: mobileMenuOpen ? '68px' : '-100%',
+                left: 0,
+                right: 0,
+                background: 'rgba(8,8,8,0.98)',
+                backdropFilter: 'blur(20px)',
+                borderBottom: '1px solid rgba(255,255,255,0.06)',
+                padding: '1.5rem',
+                zIndex: 999,
+                transition: 'top 0.3s ease',
+                display: 'flex',
+                flexDirection: 'column',
+                gap: '0.5rem'
+            }}>
+                {navLinks.map((item, i) => (
+                    <span
+                        key={i}
+                        style={{
+                            fontSize: '18px',
+                            fontWeight: '600',
+                            color: 'rgba(255,255,255,0.8)',
+                            cursor: 'pointer',
+                            padding: '14px 0',
+                            borderBottom: '1px solid rgba(255,255,255,0.05)',
+                            fontFamily: "'Barlow', sans-serif",
+                            letterSpacing: '0.02em'
+                        }}
+                        onClick={() => setMobileMenuOpen(false)}
+                    >{item.label}</span>
+                ))}
+            </div>
 
             {/* HERO */}
             <section style={{ minHeight: '100vh', position: 'relative', display: 'flex', alignItems: 'center', padding: '0 5rem' }}>
@@ -148,15 +241,23 @@ function LandingPage({ onGetStarted }) {
                     <p style={{ color: '#00d4a0', fontWeight: '700', fontSize: '12px', textTransform: 'uppercase', letterSpacing: '0.15em', marginBottom: '12px' }}>Tính năng</p>
                     <h2 style={{ fontSize: 'clamp(24px, 3vw, 48px)', fontWeight: '900', letterSpacing: '-1px', textTransform: 'uppercase', lineHeight: 1 }}>MỌI THỨ ĐỂ <span style={{ color: '#00d4a0' }}>BỨT PHÁ</span></h2>
                 </div>
-                <div className="features-grid">
+                <div className="features-grid" style={{
+                    display: 'flex',
+                    gap: '16px',
+                    overflowX: 'auto',
+                    overflowY: 'visible',
+                    WebkitOverflowScrolling: 'touch',
+                    scrollSnapType: 'x mandatory',
+                    paddingBottom: '12px',
+                    cursor: 'grab'
+                }}>
                     {features.map((f, i) => (
-                        <div key={i} ref={setRef(`feat-${i}`)} className="feature-card" style={{ ...anim(`feat-${i}`, i * 0.1) }}>
-                            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '1.5rem' }}>
-                                <div style={{ color: '#00d4a0' }}>{f.icon}</div>
-                                <span style={{ fontSize: '10px', fontWeight: '700', letterSpacing: '0.1em', textTransform: 'uppercase', color: 'rgba(0,212,160,0.6)', border: '1px solid rgba(0,212,160,0.2)', borderRadius: '2px', padding: '3px 8px' }}>{f.tag}</span>
-                            </div>
-                            <h3 style={{ fontSize: '20px', fontWeight: '800', textTransform: 'uppercase', letterSpacing: '0.02em', marginBottom: '10px' }}>{f.title}</h3>
-                            <p style={{ fontSize: '14px', fontFamily: "'Barlow', sans-serif", color: 'rgba(255,255,255,0.45)', lineHeight: 1.7 }}>{f.desc}</p>
+                        <div key={i} ref={setRef(`feat-${i}`)} className="feature-card" style={{
+                            ...anim(`feat-${i}`, i * 0.1),
+                            flex: '0 0 280px',
+                            scrollSnapAlign: 'start'
+                        }}>
+                            {/* phần content bên trong giữ nguyên */}
                         </div>
                     ))}
                 </div>

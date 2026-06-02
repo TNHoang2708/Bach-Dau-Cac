@@ -2,6 +2,7 @@ import FormInfo from '../components/FormInfo'
 import GoalPicker from '../components/GoalPicker'
 import KetQua from '../components/KetQua'
 import { useApp } from '../context/AppContext'
+import { Zap } from 'lucide-react'
 
 function TrangChu() {
     const { tuoi, canNang, chieuCao, mucTieu, soNgay, setSoNgay, setKetQua, setLoading } = useApp()
@@ -67,7 +68,10 @@ Yêu cầu:
                 </div>
             </div>
 
-            <button onClick={taoLichTap}>⚡ Tạo lịch tập ngay</button>
+            <button onClick={taoLichTap} style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px' }}>
+                <Zap size={18} /> Tạo lịch tập ngay
+            </button>
+
             <KetQua />
         </div>
     )

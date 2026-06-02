@@ -425,25 +425,127 @@ body:has(.landing-page) h1 {
 }
 
 .features-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  display: flex;
   gap: 16px;
+  overflow-x: auto;
+  overflow-y: visible;
+  scroll-snap-type: x mandatory;
+  padding-bottom: 8px;
+  -webkit-overflow-scrolling: touch;
 }
 
-@media (max-width: 900px) {
-  .features-grid {
-    grid-template-columns: repeat(2, 1fr);
-  }
+.features-grid>* {
+  flex: 0 0 280px;
+  scroll-snap-align: start;
 }
 
-@media (max-width: 500px) {
-  .features-grid {
-    grid-template-columns: 1fr;
-  }
+/* Ẩn scrollbar nhưng vẫn scroll được (tuỳ chọn) */
+.features-grid::-webkit-scrollbar {
+  height: 4px;
 }
+
+.features-grid::-webkit-scrollbar-track {
+  background: rgba(255, 255, 255, 0.05);
+  border-radius: 4px;
+}
+
+.features-grid::-webkit-scrollbar-thumb {
+  background: var(--accent);
+  border-radius: 4px;
+}
+
 
 @media (max-width: 700px) {
   .why-grid {
     grid-template-columns: 1fr !important;
+  }
+}
+
+@media (max-width: 1000px) {
+  .nav-links-desktop {
+    display: none !important;
+  }
+
+  .mobile-menu-btn {
+    display: flex !important;
+  }
+
+  section {
+    padding-left: 1.5rem !important;
+    padding-right: 1.5rem !important;
+  }
+}
+
+/* RESPONSIVE NAVBAR */
+@media (min-width: 1001px) {
+  .mobile-menu-btn {
+    display: none !important;
+  }
+
+  .mobile-menu-overlay {
+    display: none !important;
+  }
+
+  .nav-links-desktop {
+    display: flex !important;
+  }
+}
+
+@media (max-width: 1000px) {
+  .nav-links-desktop {
+    display: none !important;
+  }
+
+  .mobile-menu-btn {
+    display: flex !important;
+  }
+
+  section {
+    padding-left: 1.5rem !important;
+    padding-right: 1.5rem !important;
+  }
+
+  nav {
+    padding-left: 1rem !important;
+    padding-right: 1rem !important;
+  }
+}
+
+/* Sidebar styles */
+.sidebar {
+  box-shadow: 2px 0 10px rgba(0, 0, 0, 0.1);
+}
+
+/* Active menu item */
+.sidebar .active {
+  background: var(--accent-dim);
+  color: var(--accent);
+}
+
+/* Căn giữa nội dung chính */
+.main-content {
+  display: flex;
+  justify-content: center;
+}
+
+.container {
+  width: 100%;
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 0 2rem;
+}
+
+/* Khi có sidebar trên desktop, nội dung vẫn căn giữa trong phần còn lại */
+@media (min-width: 1025px) {
+  .main-content {
+    margin-left: 280px;
+    width: calc(100% - 280px);
+  }
+}
+
+/* Mobile: padding nhỏ hơn */
+@media (max-width: 768px) {
+  .container {
+    padding: 0 1rem;
   }
 }
