@@ -8,10 +8,10 @@ function Sidebar({ isOpen, onClose }) {
     const location = useLocation()
 
     const menuItems = [
-        { path: '/', icon: <Home size={20} />, label: 'Lịch tập' },
-        { path: '/dinh-duong', icon: <Salad size={20} />, label: 'Dinh dưỡng' },
-        { path: '/bmi', icon: <Scale size={20} />, label: 'BMI' },
-        { path: '/nhat-ky', icon: <BookOpen size={20} />, label: 'Nhật ký' },
+        { path: '/', icon: <Home size={20} strokeWidth={2} />, label: 'Lịch tập' },
+        { path: '/dinh-duong', icon: <Salad size={20} strokeWidth={2} />, label: 'Dinh dưỡng' },
+        { path: '/bmi', icon: <Scale size={20} strokeWidth={2} />, label: 'BMI' },
+        { path: '/nhat-ky', icon: <BookOpen size={20} strokeWidth={2} />, label: 'Nhật ký' },
     ]
 
     const handleNavigation = (path) => {
@@ -85,7 +85,7 @@ function Sidebar({ isOpen, onClose }) {
                             justifyContent: 'center'
                         }}
                     >
-                        <X size={20} />
+                        <X size={20} strokeWidth={2} />
                     </button>
                 </div>
 
@@ -172,7 +172,7 @@ function Sidebar({ isOpen, onClose }) {
                         onMouseEnter={(e) => e.currentTarget.style.background = 'rgba(239,68,68,0.1)'}
                         onMouseLeave={(e) => e.currentTarget.style.background = 'transparent'}
                     >
-                        <LogOut size={20} />
+                        <LogOut size={20} strokeWidth={2} />
                         <span style={{ fontSize: '14px', fontWeight: '500' }}>Đăng xuất</span>
                     </div>
                 </div>

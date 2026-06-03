@@ -1,5 +1,5 @@
 import { useApp } from '../context/AppContext'
-import { Cake, Weight, Ruler } from 'lucide-react'
+import { Calendar, Weight, Ruler } from 'lucide-react'
 
 function FormInfo() {
     const { tuoi, setTuoi, canNang, setCanNang, chieuCao, setChieuCao } = useApp()
@@ -10,19 +10,20 @@ function FormInfo() {
             <div className="form-grid">
                 <div className="field">
                     <label style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-                        <Cake size={14} /> Tuổi
+                        <Calendar className="icon-sm" />
+                        Tuổi
                     </label>
                     <input type="number" value={tuoi} onChange={(e) => setTuoi(e.target.value)} placeholder="25" />
                 </div>
                 <div className="field">
                     <label style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-                        <Weight size={14} /> Cân nặng (kg)
+                        <Weight className="icon-sm" /> Cân nặng (kg)
                     </label>
                     <input type="number" value={canNang} onChange={(e) => setCanNang(e.target.value)} placeholder="70" />
                 </div>
                 <div className="field">
                     <label style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-                        <Ruler size={14} /> Chiều cao (cm)
+                        <Ruler className="icon-sm" /> Chiều cao (cm)
                     </label>
                     <input type="number" value={chieuCao} onChange={(e) => setChieuCao(e.target.value)} placeholder="175" />
                 </div>

@@ -1,0 +1,23 @@
+.icon-sm {
+    width: 15px;
+    height: 15px;
+    stroke-width: 2;
+}
+
+.icon-md {
+    width: 20px;
+    height: 20px;
+    stroke-width: 2;
+}
+
+.icon-lg {
+    width: 32px;
+    height: 32px;
+    stroke-width: 2;
+}
+
+.icon-xl {
+    width: 48px;
+    height: 48px;
+    stroke-width: 2;
+}

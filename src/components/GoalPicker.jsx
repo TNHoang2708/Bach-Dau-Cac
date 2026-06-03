@@ -5,10 +5,10 @@ function GoalPicker() {
     const { mucTieu, setMucTieu } = useApp()
 
     const goals = [
-        { value: 'Tăng cơ', icon: <Dumbbell size={32} />, desc: 'Xây dựng khối cơ' },
-        { value: 'Giảm mỡ', icon: <Flame size={32} />, desc: 'Đốt cháy mỡ thừa' },
-        { value: 'Tăng cơ/Giảm mỡ', icon: <Zap size={32} />, desc: 'Tổng hợp' },
-        { value: 'Tăng sức bền', icon: <Timer size={32} />, desc: 'Cardio & endurance' },
+        { value: 'Tăng cơ', icon: <Dumbbell size={32} strokeWidth={2} />, desc: 'Xây dựng khối cơ' },
+        { value: 'Giảm mỡ', icon: <Flame size={32} strokeWidth={2} />, desc: 'Đốt cháy mỡ thừa' },
+        { value: 'Tăng cơ/Giảm mỡ', icon: <Zap size={32} strokeWidth={2} />, desc: 'Tổng hợp' },
+        { value: 'Tăng sức bền', icon: <Timer size={32} strokeWidth={2} />, desc: 'Cardio & endurance' },
     ]
 
     return (

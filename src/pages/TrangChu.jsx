@@ -3,6 +3,7 @@ import GoalPicker from '../components/GoalPicker'
 import KetQua from '../components/KetQua'
 import { useApp } from '../context/AppContext'
 import { Zap } from 'lucide-react'
+import AICoach from '../components/AICoach'
 
 function TrangChu() {
     const { tuoi, canNang, chieuCao, mucTieu, soNgay, setSoNgay, setKetQua, setLoading } = useApp()
@@ -73,6 +74,7 @@ Yêu cầu:
             </button>
 
             <KetQua />
+            <AICoach />
         </div>
     )
 }

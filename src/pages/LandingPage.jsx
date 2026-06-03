@@ -49,10 +49,10 @@ function LandingPage({ onGetStarted }) {
 
 
     const features = [
-        { icon: <Dumbbell size={28} />, title: 'Lịch tập AI', desc: '...', tag: 'Cá nhân hóa' },
-        { icon: <Camera size={28} />, title: 'Phân tích dinh dưỡng', desc: '...', tag: 'AI Vision' },
-        { icon: <Scale size={28} />, title: 'Tính chỉ số BMI', desc: '...', tag: 'Sức khoẻ' },
-        { icon: <BookOpen size={28} />, title: 'Nhật ký tập luyện', desc: '...', tag: 'Theo dõi' },
+        { icon: <Dumbbell size={28} strokeWidth={2} />, title: 'Lịch tập AI', desc: '...', tag: 'Cá nhân hóa' },
+        { icon: <Camera size={28} strokeWidth={2} />, title: 'Phân tích dinh dưỡng', desc: '...', tag: 'AI Vision' },
+        { icon: <Scale size={28} strokeWidth={2} />, title: 'Tính chỉ số BMI', desc: '...', tag: 'Sức khoẻ' },
+        { icon: <BookOpen size={28} strokeWidth={2} />, title: 'Nhật ký tập luyện', desc: '...', tag: 'Theo dõi' },
     ]
 
     const navLinks = [
@@ -159,7 +159,10 @@ function LandingPage({ onGetStarted }) {
                         justifyContent: 'center'
                     }}
                 >
-                    {mobileMenuOpen ? <X size={24} /> : <Menu size={24} />}
+                    {mobileMenuOpen
+                        ? <X size={24} strokeWidth={2} />
+                        : <Menu size={24} strokeWidth={2} />
+                    }
                 </button>
             </nav>
 
@@ -275,9 +278,9 @@ function LandingPage({ onGetStarted }) {
                 </div>
                 <div className="why-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(260px, 1fr))', gap: '16px' }}>
                     {[
-                        { icon: <Zap size={28} />, title: 'Nhanh chóng', desc: 'Chụp ảnh bữa ăn — có kết quả dinh dưỡng trong vài giây', tag: 'AI' },
-                        { icon: <TrendingUp size={28} />, title: 'Theo dõi tiến trình', desc: 'Nhật ký tập luyện giúp bạn thấy rõ sự tiến bộ theo từng tuần', tag: 'Smart' },
-                        { icon: <Shield size={28} />, title: 'Hoàn toàn miễn phí', desc: 'Không cần thẻ tín dụng, không giới hạn tính năng cơ bản', tag: 'Free' },
+                        { icon: <Zap size={28} strokeWidth={2} />, title: 'Nhanh chóng', desc: 'Chụp ảnh bữa ăn — có kết quả dinh dưỡng trong vài giây', tag: 'AI' },
+                        { icon: <TrendingUp size={28} strokeWidth={2} />, title: 'Theo dõi tiến trình', desc: 'Nhật ký tập luyện giúp bạn thấy rõ sự tiến bộ theo từng tuần', tag: 'Smart' },
+                        { icon: <Shield size={28} strokeWidth={2} />, title: 'Hoàn toàn miễn phí', desc: 'Không cần thẻ tín dụng, không giới hạn tính năng cơ bản', tag: 'Free' },
                     ].map((item, i) => (
                         <div key={i} ref={setRef(`why-${i}`)} className="feature-card" style={{ ...anim(`why-${i}`, i * 0.12) }}>
                             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '1.5rem' }}>
