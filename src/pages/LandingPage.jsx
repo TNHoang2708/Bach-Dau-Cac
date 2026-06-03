@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef } from 'react'
 import { Dumbbell, Salad, Scale, BookOpen, Zap, ChevronRight, Star, Camera, TrendingUp, Shield, Menu, X } from 'lucide-react'
+import '../styles/LandingPage.css'
 
 function LandingPage({ onGetStarted }) {
     const [scrollY, setScrollY] = useState(0)
@@ -71,52 +72,16 @@ function LandingPage({ onGetStarted }) {
 
     return (
         <div className="landing-page" style={{ width: '100%', fontFamily: "'Barlow Condensed', 'Arial Narrow', sans-serif", background: '#080808', color: '#fff' }}>
-            <style>{`
-                @import url('https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@400;600;700;800;900&family=Barlow:wght@400;500;600&display=swap');
-                * { margin: 0; padding: 0; box-sizing: border-box; }
-                body { overflow-x: hidden; }
-                ::-webkit-scrollbar { width: 4px; }
-                ::-webkit-scrollbar-track { background: #080808; }
-                ::-webkit-scrollbar-thumb { background: #00d4a0; border-radius: 2px; }
-                .btn-primary { display: inline-flex; align-items: center; gap: 8px; padding: 16px 40px; font-size: 15px; font-weight: 800; font-family: 'Barlow Condensed', sans-serif; letter-spacing: 0.1em; text-transform: uppercase; background: #00d4a0; color: #000; border: none; border-radius: 4px; cursor: pointer; transition: all 0.25s ease; }
-                .btn-primary:hover { background: #00ffbf; transform: translateY(-2px); box-shadow: 0 12px 40px rgba(0,212,160,0.35); }
-                .btn-ghost { display: inline-flex; align-items: center; gap: 6px; padding: 10px 24px; font-size: 14px; font-weight: 700; font-family: 'Barlow Condensed', sans-serif; letter-spacing: 0.05em; text-transform: uppercase; background: transparent; color: #fff; border: 1px solid rgba(255,255,255,0.25); border-radius: 4px; cursor: pointer; transition: all 0.25s ease; }
-                .btn-ghost:hover { border-color: #00d4a0; color: #00d4a0; }
-                .feature-card { background: rgba(255,255,255,0.02); border: 1px solid rgba(255,255,255,0.06); border-radius: 8px; padding: 2.5rem 2rem; transition: all 0.3s ease; cursor: default; }
-                .feature-card:hover { background: rgba(0,212,160,0.05); border-color: rgba(0,212,160,0.25); transform: translateY(-4px); }
-                @keyframes fadeInUp { from { opacity: 0; transform: translateY(24px); } to { opacity: 1; transform: translateY(0); } }
-                @keyframes bounce { 0%, 100% { transform: translateX(-50%) translateY(0); } 50% { transform: translateX(-50%) translateY(8px); } }
-            `}</style>
-
             {/* NAVBAR */}
-            <nav style={{
-                position: 'fixed',
-                top: 0,
-                left: 0,
-                right: 0,
-                display: 'flex',
-                justifyContent: 'space-between',
-                alignItems: 'center',
-                padding: '1rem 3rem',
-                background: scrollY > 50 ? 'rgba(8,8,8,0.95)' : 'transparent',
-                borderBottom: scrollY > 50 ? '1px solid rgba(255,255,255,0.06)' : 'none',
-                backdropFilter: scrollY > 50 ? 'blur(20px)' : 'none',
-                transition: 'all 0.4s ease',
-                zIndex: 1000
-            }}>
+            <nav className="landing-navbar">
                 {/* Logo */}
-                <div style={{ display: 'flex', alignItems: 'center', gap: '10px', flexShrink: 0 }}>
+                <div className="landing-logo">
                     <Dumbbell size={22} color='#00d4a0' strokeWidth={2.5} />
                     <span style={{ fontWeight: '900', fontSize: '18px', letterSpacing: '0.05em', textTransform: 'uppercase' }}>Gym Planner AI</span>
                 </div>
 
                 {/* Desktop Menu */}
-                <div className="nav-links-desktop" style={{
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: '2rem',
-                    margin: '0 2rem'
-                }}>
+                <div className="nav-links-desktop" >
                     {navLinks.map((item, i) => (
                         <span key={i} style={{
                             fontSize: '14px',
@@ -201,18 +166,18 @@ function LandingPage({ onGetStarted }) {
             </div>
 
             {/* HERO */}
-            <section style={{ minHeight: '100vh', position: 'relative', display: 'flex', alignItems: 'center', padding: '0 5rem' }}>
+            <section className="hero-section">
                 <img src="https://images.unsplash.com/photo-1534438327276-14e5300c3a48?w=1600&q=80" alt="" style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'cover', objectPosition: 'center top', filter: 'brightness(0.5) contrast(1.1)' }} />
                 <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(105deg, rgba(8,8,8,1) 40%, rgba(8,8,8,0.3) 70%, transparent 100%)' }} />
                 <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(to top, rgba(0,212,160,0.15) 0%, transparent 40%)' }} />
                 <div style={{ position: 'absolute', inset: 0, background: 'radial-gradient(ellipse at 70% 50%, transparent 30%, rgba(8,8,8,0.6) 100%)' }} />
                 <div style={{ position: 'absolute', left: 0, top: '20%', bottom: '20%', width: '3px', background: 'linear-gradient(to bottom, transparent, #00d4a0, transparent)' }} />
 
-                <div style={{ position: 'relative', zIndex: 1, maxWidth: '680px' }}>
-                    <h1 style={{ fontSize: 'clamp(52px, 7vw, 96px)', fontWeight: '900', lineHeight: 0.95, letterSpacing: '-1px', textTransform: 'uppercase', marginBottom: '1.75rem', animation: 'fadeInUp 0.8s ease 0.1s both' }}>
+                <div className="hero-content">
+                    <h1 className="hero-title">
                         SHAPE YOUR<br /><span style={{ color: '#00d4a0' }}>BODY</span><br />WITH AI
                     </h1>
-                    <p style={{ fontSize: '17px', fontFamily: "'Barlow', sans-serif", color: 'rgba(255,255,255,0.55)', lineHeight: 1.75, marginBottom: '2.5rem', maxWidth: '440px', animation: 'fadeInUp 0.8s ease 0.2s both' }}>
+                    <p className="hero-description">
                         Lịch tập cá nhân hóa, phân tích dinh dưỡng từ ảnh thông minh — hoàn toàn miễn phí.
                     </p>
                     <div style={{ animation: 'fadeInUp 0.8s ease 0.3s both' }}>
@@ -238,22 +203,17 @@ function LandingPage({ onGetStarted }) {
             </section>
 
             {/* FEATURES */}
-            <section style={{ padding: '8rem 5rem', position: 'relative' }}>
-                <div style={{ position: 'absolute', top: 0, left: '5rem', right: '5rem', height: '1px', background: 'rgba(255,255,255,0.06)' }} />
-                <div ref={setRef('feat-title')} style={{ marginBottom: '3rem', ...anim('feat-title') }}>
+            <section className="features-section">
+                <div className="features-divider" />
+                <div
+                    ref={setRef('feat-title')}
+                    className="features-header"
+                    style={anim('feat-title')}
+                >
                     <p style={{ color: '#00d4a0', fontWeight: '700', fontSize: '12px', textTransform: 'uppercase', letterSpacing: '0.15em', marginBottom: '12px' }}>Tính năng</p>
                     <h2 style={{ fontSize: 'clamp(24px, 3vw, 48px)', fontWeight: '900', letterSpacing: '-1px', textTransform: 'uppercase', lineHeight: 1 }}>MỌI THỨ ĐỂ <span style={{ color: '#00d4a0' }}>BỨT PHÁ</span></h2>
                 </div>
-                <div className="features-grid" style={{
-                    display: 'flex',
-                    gap: '16px',
-                    overflowX: 'auto',
-                    overflowY: 'visible',
-                    WebkitOverflowScrolling: 'touch',
-                    scrollSnapType: 'x mandatory',
-                    paddingBottom: '12px',
-                    cursor: 'grab'
-                }}>
+                <div className="features-grid">
                     {features.map((f, i) => (
                         <div key={i} ref={setRef(`feat-${i}`)} className="feature-card" style={{
                             ...anim(`feat-${i}`, i * 0.1),
@@ -267,16 +227,20 @@ function LandingPage({ onGetStarted }) {
             </section>
 
             {/* WHY */}
-            <section style={{ padding: '8rem 5rem', background: 'rgba(0,212,160,0.03)', position: 'relative' }}>
-                <div style={{ position: 'absolute', top: 0, left: 0, right: 0, height: '1px', background: 'rgba(0,212,160,0.1)' }} />
-                <div style={{ position: 'absolute', bottom: 0, left: 0, right: 0, height: '1px', background: 'rgba(0,212,160,0.1)' }} />
-                <div ref={setRef('why-title')} style={{ marginBottom: '3rem', ...anim('why-title') }}>
+            <section className="why-section">
+                <div className="why-divider-top" />
+                <div className="why-divider-bottom" />
+                <div
+                    ref={setRef('why-title')}
+                    className="why-header"
+                    style={anim('why-title')}
+                >
                     <p style={{ color: '#00d4a0', fontWeight: '700', fontSize: '12px', textTransform: 'uppercase', letterSpacing: '0.15em', marginBottom: '12px' }}>Tại sao chọn chúng tôi</p>
                     <h2 style={{ fontSize: 'clamp(24px, 3vw, 48px)', fontWeight: '900', letterSpacing: '-1px', textTransform: 'uppercase', lineHeight: 1 }}>
                         ĐƠN GIẢN. <span style={{ color: '#00d4a0' }}>THÔNG MINH.</span> HIỆU QUẢ.
                     </h2>
                 </div>
-                <div className="why-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(260px, 1fr))', gap: '16px' }}>
+                <div className="why-grid">
                     {[
                         { icon: <Zap size={28} strokeWidth={2} />, title: 'Nhanh chóng', desc: 'Chụp ảnh bữa ăn — có kết quả dinh dưỡng trong vài giây', tag: 'AI' },
                         { icon: <TrendingUp size={28} strokeWidth={2} />, title: 'Theo dõi tiến trình', desc: 'Nhật ký tập luyện giúp bạn thấy rõ sự tiến bộ theo từng tuần', tag: 'Smart' },
@@ -295,31 +259,33 @@ function LandingPage({ onGetStarted }) {
             </section>
 
             {/* CTA */}
-            <section style={{ padding: '10rem 5rem', textAlign: 'center', position: 'relative' }}>
-                <img src="https://images.unsplash.com/photo-1571902943202-507ec2618e8f?w=1600&q=80" alt="" style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'cover', filter: 'brightness(0.15)' }} />
-                <div style={{ position: 'absolute', inset: 0, background: 'rgba(8,8,8,0.7)' }} />
-                <div ref={setRef('cta')} style={{ position: 'relative', zIndex: 1, ...anim('cta') }}>
+            <section className="cta-section">
+                <img src="https://images.unsplash.com/photo-1571902943202-507ec2618e8f?w=1600&q=80" alt="" className="cta-bg" />
+                <div className="cta-overlay" />
+                <div ref={setRef('cta')} className="cta-content"
+                    style={anim('cta')}
+                >
                     <p style={{ color: '#00d4a0', fontWeight: '700', fontSize: '12px', textTransform: 'uppercase', letterSpacing: '0.15em', marginBottom: '1.5rem' }}>Sẵn sàng chưa?</p>
                     <h2 style={{ fontSize: 'clamp(20px, 2.5vw, 36px)', fontWeight: '900', letterSpacing: '-1px', textTransform: 'uppercase', lineHeight: 1 }}>SẴN SÀNG<br /><span style={{ color: '#00d4a0' }}>BỨT GIỚI HẠN?</span></h2>
-                    <p style={{ fontFamily: "'Barlow', sans-serif", color: 'rgba(255,255,255,0.45)', fontSize: '17px', marginBottom: '3rem' }}>Miễn phí hoàn toàn. Không cần thẻ tín dụng.</p>
+                    <p className="cta-description">Miễn phí hoàn toàn. Không cần thẻ tín dụng.</p>
                     <button className="btn-primary" onClick={onGetStarted} style={{ fontSize: '17px', padding: '18px 56px' }}><Zap size={17} fill="#000" strokeWidth={0} /> Bắt đầu ngay</button>
                 </div>
             </section>
 
             {/* FOOTER */}
-            <footer style={{ padding: '4rem 5rem 2rem', borderTop: '1px solid rgba(255,255,255,0.06)', background: '#080808' }}>
-                <div style={{ display: 'grid', gridTemplateColumns: '1.5fr repeat(4, 1fr)', gap: '3rem', marginBottom: '3rem' }}>
+            <footer className="landing-footer">
+                <div className="footer-grid">
 
                     {/* Logo + desc + social */}
                     <div>
-                        <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '1rem' }}>
+                        <div className="footer-logo">
                             <Dumbbell size={20} color='#00d4a0' />
                             <span style={{ fontWeight: '900', fontSize: '16px', textTransform: 'uppercase' }}>Gym Planner AI</span>
                         </div>
                         <p style={{ fontSize: '13px', fontFamily: "'Barlow', sans-serif", color: 'rgba(255,255,255,0.4)', lineHeight: 1.7, marginBottom: '1.5rem' }}>
                             Ứng dụng tập luyện thông minh — cá nhân hóa lịch tập và phân tích dinh dưỡng bằng AI.
                         </p>
-                        <div style={{ display: 'flex', gap: '12px' }}>
+                        <div className="footer-social">
                             {['IG', 'TK', 'FB', 'YT'].map((s, i) => (
                                 <div key={i} style={{ width: '34px', height: '34px', borderRadius: '8px', border: '1px solid rgba(255,255,255,0.1)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '11px', fontWeight: '700', color: 'rgba(255,255,255,0.4)', cursor: 'pointer', transition: 'all 0.2s' }}
                                     onMouseEnter={e => { e.currentTarget.style.borderColor = '#00d4a0'; e.currentTarget.style.color = '#00d4a0' }}
@@ -361,7 +327,7 @@ function LandingPage({ onGetStarted }) {
                 </div>
 
                 {/* Bottom bar */}
-                <div style={{ borderTop: '1px solid rgba(255,255,255,0.06)', paddingTop: '1.5rem', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '1rem' }}>
+                <div className="footer-bottom">
                     <span style={{ fontSize: '12px', fontFamily: "'Barlow', sans-serif", color: 'rgba(255,255,255,0.25)' }}>
                         © 2025 Gym Planner AI. All rights reserved.
                     </span>

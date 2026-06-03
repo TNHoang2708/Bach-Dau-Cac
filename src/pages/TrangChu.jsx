@@ -52,6 +52,8 @@ Yêu cầu:
         setLoading(false);
     }
 
+    const options = ['3 ngày', '4 ngày', '5 ngày', '6 ngày']
+
     return (
         <div>
             <FormInfo />
@@ -59,13 +61,23 @@ Yêu cầu:
 
             <div className="card">
                 <div className="card-title">Số ngày tập mỗi tuần</div>
-                <div className="field">
-                    <select value={soNgay} onChange={(e) => setSoNgay(e.target.value)}>
-                        <option>3 ngày</option>
-                        <option>4 ngày</option>
-                        <option>5 ngày</option>
-                        <option>6 ngày</option>
-                    </select>
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '10px' }}>
+                    {options.map(opt => (
+                        <div
+                            key={opt}
+                            onClick={() => setSoNgay(opt)}
+                            className={`goal-card ${soNgay === opt ? 'active' : ''}`}
+                            style={{ padding: '14px 0', flexDirection: 'column', gap: '2px' }}
+                        >
+                            <strong style={{
+                                fontSize: '22px',
+                                color: soNgay === opt ? 'var(--accent)' : 'var(--text)'
+                            }}>
+                                {opt.replace(' ngày', '')}
+                            </strong>
+                            <span style={{ fontSize: '12px', color: 'var(--text-secondary)' }}>ngày</span>
+                        </div>
+                    ))}
                 </div>
             </div>
 

@@ -1,15 +1,62 @@
 import { createContext, useContext, useState, useEffect } from 'react'
+import { useApp } from './AppContext'
 
 const FoodContext = createContext()
 
+// Tính dailyGoal động từ thông tin user
+function tinhGoal(canNang, chieuCao, tuoi, mucTieu) {
+    const kg = parseFloat(canNang)
+    const cm = parseFloat(chieuCao)
+    const age = parseInt(tuoi)
+
+    // Nếu chưa nhập đủ thì trả về default
+    if (!kg || !cm || !age) {
+        return { calories: 2500, protein: 150, carbs: 300, fat: 80 }
+    }
+
+    // BMR công thức Mifflin-St Jeor (dùng nam, vì app gym)
+    const bmr = 10 * kg + 6.25 * cm - 5 * age + 5
+    // TDEE x1.55 (tập vừa phải)
+    const tdee = Math.round(bmr * 1.55)
+
+    let calories, protein, carbs, fat
+
+    if (mucTieu === 'Tăng cơ') {
+        calories = tdee + 300
+        protein = Math.round(kg * 2.2)         // 2.2g/kg
+        fat = Math.round((calories * 0.25) / 9) // 25% calo từ fat
+        carbs = Math.round((calories - protein * 4 - fat * 9) / 4)
+    } else if (mucTieu === 'Giảm mỡ') {
+        calories = tdee - 400
+        protein = Math.round(kg * 2.4)         // giữ cơ khi cut
+        fat = Math.round((calories * 0.25) / 9)
+        carbs = Math.round((calories - protein * 4 - fat * 9) / 4)
+    } else if (mucTieu === 'Tăng cơ/Giảm mỡ') {
+        calories = tdee
+        protein = Math.round(kg * 2.0)
+        fat = Math.round((calories * 0.28) / 9)
+        carbs = Math.round((calories - protein * 4 - fat * 9) / 4)
+    } else {
+        // Tăng sức bền
+        calories = tdee + 100
+        protein = Math.round(kg * 1.6)
+        fat = Math.round((calories * 0.25) / 9)
+        carbs = Math.round((calories - protein * 4 - fat * 9) / 4)
+    }
+
+    return {
+        calories: Math.max(calories, 1500),
+        protein: Math.max(protein, 50),
+        carbs: Math.max(carbs, 50),
+        fat: Math.max(fat, 30),
+    }
+}
+
 export function FoodProvider({ children }) {
-    const [foodLog, setFoodLog] = useState([]) // [{name, protein, calories, time}]
-    const [dailyGoal, setDailyGoal] = useState({
-        calories: 3700,
-        protein: 160,
-        carbs: 540,
-        fat: 105
-    })
+    const { canNang, chieuCao, tuoi, mucTieu } = useApp()
+    const [foodLog, setFoodLog] = useState([])
+
+    const dailyGoal = tinhGoal(canNang, chieuCao, tuoi, mucTieu)
 
     // Load từ localStorage
     useEffect(() => {
@@ -37,7 +84,6 @@ export function FoodProvider({ children }) {
         const todayMeals = foodLog.filter(m =>
             new Date(m.time).toDateString() === today
         )
-
         const total = { calories: 0, protein: 0, carbs: 0, fat: 0 }
         todayMeals.forEach(meal => {
             total.calories += meal.calories || 0
@@ -59,39 +105,12 @@ export function FoodProvider({ children }) {
         }
     }
 
-    // Gợi ý từ AI
-    const getSuggestion = () => {
-        const remaining = getRemaining()
-        if (remaining.protein <= 0 && remaining.calories <= 0) {
-            return "🎉 Hôm nay bạn đã đạt mục tiêu! Nghỉ ngơi thôi."
-        }
-
-        let suggestion = `⚠️ Hôm nay bạn còn thiếu:\n`
-        if (remaining.calories > 0) suggestion += `• ${remaining.calories} calo\n`
-        if (remaining.protein > 0) suggestion += `• ${remaining.protein}g protein\n`
-
-        suggestion += `\n💪 Gợi ý bữa tiếp theo:\n`
-
-        if (remaining.protein > 50) {
-            suggestion += `• 200g ức gà (+62g protein, ~330 calo)\n`
-        } else if (remaining.protein > 30) {
-            suggestion += `• 100g ức gà (+31g protein, ~165 calo)\n`
-            suggestion += `• 2 quả trứng (+13g protein, ~150 calo)\n`
-        } else {
-            suggestion += `• 2 quả trứng (+13g protein, ~150 calo)\n`
-            suggestion += `• 1 hũ sữa chua Hy Lạp (+10g protein, ~100 calo)\n`
-        }
-
-        return suggestion
-    }
-
     return (
         <FoodContext.Provider value={{
             foodLog,
             addMeal,
             getTodayTotal,
             getRemaining,
-            getSuggestion,
             dailyGoal
         }}>
             {children}

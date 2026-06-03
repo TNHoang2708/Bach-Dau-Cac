@@ -16,28 +16,24 @@ function Sidebar({ isOpen, onClose }) {
 
     const handleNavigation = (path) => {
         navigate(path)
-        if (window.innerWidth <= 1024) onClose()
+        onClose()
     }
 
     return (
         <>
-            {/* Overlay tối - chỉ hiện khi sidebar mở trên mobile/tablet */}
-            {isOpen && window.innerWidth <= 1024 && (
-                <div
-                    className="sidebar-overlay"
-                    onClick={onClose}
-                    style={{
-                        position: 'fixed',
-                        top: 0,
-                        left: 0,
-                        right: 0,
-                        bottom: 0,
-                        background: 'rgba(0,0,0,0.5)',
-                        zIndex: 998,
-                        transition: 'opacity 0.25s ease'
-                    }}
-                />
-            )}
+            {/* Overlay - luôn render, dùng opacity/pointerEvents để toggle */}
+            <div
+                onClick={onClose}
+                style={{
+                    position: 'fixed',
+                    inset: 0,
+                    background: 'rgba(0,0,0,0.55)',
+                    zIndex: 998,
+                    opacity: isOpen ? 1 : 0,
+                    pointerEvents: isOpen ? 'auto' : 'none',
+                    transition: 'opacity 0.25s ease',
+                }}
+            />
 
             {/* Sidebar */}
             <div className={`sidebar ${isOpen ? 'open' : ''}`} style={{
@@ -69,7 +65,6 @@ function Sidebar({ isOpen, onClose }) {
                             Gym Planner AI
                         </span>
                     </div>
-                    {/* Nút X - hiện trên mobile và tablet (khi sidebar được mở bằng nút menu) */}
                     <button
                         onClick={onClose}
                         className="sidebar-close-btn"
@@ -179,17 +174,12 @@ function Sidebar({ isOpen, onClose }) {
             </div>
 
             <style>{`
-                /* Tablet: ẩn nút X trên desktop (khi sidebar tự hiện) */
                 @media (min-width: 1025px) {
+                    .sidebar {
+                        transform: translateX(0) !important;
+                    }
                     .sidebar-close-btn {
                         display: none !important;
-                    }
-                }
-
-                /* Mobile và Tablet nhỏ: hiển thị nút X */
-                @media (max-width: 1024px) {
-                    .sidebar-close-btn {
-                        display: flex !important;
                     }
                 }
             `}</style>
