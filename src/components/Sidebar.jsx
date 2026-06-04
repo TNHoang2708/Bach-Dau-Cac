@@ -1,8 +1,9 @@
-import { Dumbbell, Home, Salad, Scale, BookOpen, LogOut, X } from 'lucide-react'
+import { Home, Salad, Scale, BookOpen, LogOut, PanelLeft, Settings, HelpCircle, ChevronUp, Globe, ArrowUpCircle, Download, Info, ChevronRight } from 'lucide-react'
 import { useAuth } from '../context/AuthContext'
 import { useNavigate, useLocation } from 'react-router-dom'
+import { useState, useRef, useEffect } from 'react'
 
-function Sidebar({ isOpen, onClose }) {
+function Sidebar({ isOpen, isCollapsed, isDesktop, onToggleCollapse, onClose }) {
     const { user, dangXuat } = useAuth()
     const navigate = useNavigate()
     const location = useLocation()
@@ -14,161 +15,227 @@ function Sidebar({ isOpen, onClose }) {
         { path: '/nhat-ky', icon: <BookOpen size={20} strokeWidth={2} />, label: 'Nhật ký' },
     ]
 
+    const [showUserMenu, setShowUserMenu] = useState(false)
+    const userMenuRef = useRef(null)
+
+    useEffect(() => {
+        const handle = (e) => {
+            if (userMenuRef.current && !userMenuRef.current.contains(e.target)) {
+                setShowUserMenu(false)
+            }
+        }
+        document.addEventListener('mousedown', handle)
+        return () => document.removeEventListener('mousedown', handle)
+    }, [])
+
     const handleNavigation = (path) => {
         navigate(path)
-        onClose()
+        if (window.innerWidth <= 1024) onClose()
     }
+
+    const w = isCollapsed ? '64px' : '280px'
+
+    // Reusable row renderer
+    const renderRow = ({ icon, label, shortcut, trailing, danger, onClick }) => (
+        <div
+            onClick={onClick}
+            style={{
+                display: 'flex', alignItems: 'center', gap: '12px',
+                padding: '10px 12px', borderRadius: '8px', cursor: 'pointer',
+                fontSize: '14px', color: danger ? '#ef4444' : 'var(--text)',
+                transition: 'background 0.15s', whiteSpace: 'nowrap',
+            }}
+            onMouseEnter={e => e.currentTarget.style.background = danger ? 'rgba(239,68,68,0.1)' : 'rgba(255,255,255,0.06)'}
+            onMouseLeave={e => e.currentTarget.style.background = 'transparent'}
+        >
+            <span style={{ color: danger ? '#ef4444' : 'var(--text-secondary)', display: 'flex' }}>{icon}</span>
+            <span style={{ flex: 1, overflow: 'hidden', textOverflow: 'ellipsis' }}>{label}</span>
+            {shortcut && (
+                <span style={{ fontSize: '12px', color: 'var(--text-secondary)' }}>{shortcut}</span>
+            )}
+            {trailing && (
+                <span style={{ color: 'var(--text-secondary)', display: 'flex' }}>{trailing}</span>
+            )}
+        </div>
+    )
 
     return (
         <>
-            {/* Overlay - luôn render, dùng opacity/pointerEvents để toggle */}
+            {/* Overlay mobile only */}
             <div
                 onClick={onClose}
                 style={{
-                    position: 'fixed',
-                    inset: 0,
+                    position: 'fixed', inset: 0,
                     background: 'rgba(0,0,0,0.55)',
                     zIndex: 998,
-                    opacity: isOpen ? 1 : 0,
-                    pointerEvents: isOpen ? 'auto' : 'none',
+                    opacity: (!isDesktop && isOpen) ? 1 : 0,
+                    pointerEvents: (!isDesktop && isOpen) ? 'auto' : 'none',
                     transition: 'opacity 0.25s ease',
                 }}
             />
 
-            {/* Sidebar */}
-            <div className={`sidebar ${isOpen ? 'open' : ''}`} style={{
-                position: 'fixed',
-                top: 0,
-                left: 0,
-                bottom: 0,
-                width: '280px',
-                background: 'var(--card)',
-                borderRight: '1px solid var(--border)',
-                display: 'flex',
-                flexDirection: 'column',
-                zIndex: 999,
-                transition: 'transform 0.25s cubic-bezier(0.4, 0, 0.2, 1)',
-                willChange: 'transform',
-                transform: isOpen ? 'translateX(0)' : 'translateX(-100%)',
-            }}>
-                {/* Header với logo và nút X */}
+            <div
+                className="sidebar"
+                style={{
+                    position: 'fixed',
+                    top: 0, left: 0, bottom: 0,
+                    width: w,
+                    background: 'var(--card)',
+                    borderRight: '1px solid var(--border)',
+                    display: 'flex',
+                    flexDirection: 'column',
+                    zIndex: 999,
+                    transition: 'transform 0.25s cubic-bezier(0.4,0,0.2,1), width 0.25s cubic-bezier(0.4,0,0.2,1)',
+                    transform: isOpen ? 'translateX(0)' : 'translateX(-100%)',
+                    overflow: 'visible',
+                }}
+            >
+                {/* Header */}
                 <div style={{
-                    padding: '1.5rem',
                     borderBottom: '1px solid var(--border)',
                     display: 'flex',
                     alignItems: 'center',
-                    justifyContent: 'space-between'
+                    justifyContent: isCollapsed ? 'center' : 'space-between',
+                    minHeight: '56px',
+                    padding: '0 12px',
                 }}>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-                        <Dumbbell size={28} color='#00d4a0' strokeWidth={2.5} />
-                        <span style={{ fontWeight: '900', fontSize: '20px', letterSpacing: '0.05em', textTransform: 'uppercase' }}>
+                    {!isCollapsed && (
+                        <span style={{ fontWeight: '900', fontSize: '15px', letterSpacing: '0.05em', textTransform: 'uppercase', color: 'var(--text)', whiteSpace: 'nowrap' }}>
                             Gym Planner AI
                         </span>
-                    </div>
+                    )}
                     <button
-                        onClick={onClose}
-                        className="sidebar-close-btn"
+                        onClick={onToggleCollapse}
+                        onMouseEnter={e => e.currentTarget.style.background = 'rgba(255,255,255,0.08)'}
+                        onMouseLeave={e => e.currentTarget.style.background = 'transparent'}
                         style={{
-                            background: 'transparent',
-                            border: 'none',
-                            color: 'var(--text-secondary)',
-                            cursor: 'pointer',
-                            padding: '8px',
-                            borderRadius: '8px',
-                            display: 'flex',
-                            alignItems: 'center',
-                            justifyContent: 'center'
+                            background: 'transparent', border: 'none',
+                            color: 'var(--text-secondary)', cursor: 'pointer',
+                            padding: '8px', borderRadius: '8px',
+                            display: 'flex', alignItems: 'center', justifyContent: 'center',
+                            width: '36px', height: '36px', flexShrink: 0,
                         }}
                     >
-                        <X size={20} strokeWidth={2} />
+                        <PanelLeft size={18} strokeWidth={2} style={{ transform: isCollapsed ? 'rotate(180deg)' : 'none', transition: 'transform 0.25s' }} />
                     </button>
                 </div>
 
-                {/* User Info */}
-                <div style={{
-                    padding: '0 1rem 1rem 1rem',
-                    borderBottom: '1px solid var(--border)',
-                    marginBottom: '1rem'
-                }}>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-                        <img
-                            src={user?.photoURL || `https://ui-avatars.com/api/?name=${user?.email || 'User'}&background=00d4a0&color=000`}
-                            alt="avatar"
-                            style={{
-                                width: '48px',
-                                height: '48px',
-                                borderRadius: '50%',
-                                objectFit: 'cover',
-                                border: '2px solid #00d4a0'
-                            }}
-                        />
-                        <div>
-                            <div style={{ fontWeight: '600', fontSize: '14px', color: 'var(--text)' }}>
-                                {user?.displayName || 'User'}
+                {/* Menu Items */}
+                <div style={{ flex: 1, padding: isCollapsed ? '0.5rem 0' : '0.5rem 0.75rem', overflow: 'hidden' }}>
+                    {menuItems.map((item) => {
+                        const active = location.pathname === item.path
+                        return (
+                            <div
+                                key={item.path}
+                                onClick={() => handleNavigation(item.path)}
+                                title={isCollapsed ? item.label : ''}
+                                style={{
+                                    display: 'flex',
+                                    alignItems: 'center',
+                                    justifyContent: isCollapsed ? 'center' : 'flex-start',
+                                    gap: '12px',
+                                    padding: isCollapsed ? '12px 0' : '11px 16px',
+                                    borderRadius: isCollapsed ? '0' : '12px',
+                                    marginBottom: '2px',
+                                    cursor: 'pointer',
+                                    background: active ? 'var(--accent-dim)' : 'transparent',
+                                    color: active ? 'var(--accent)' : 'var(--text-secondary)',
+                                    transition: 'all 0.15s',
+                                    borderLeft: isCollapsed && active ? '2px solid var(--accent)' : isCollapsed ? '2px solid transparent' : 'none',
+                                }}
+                                onMouseEnter={(e) => { if (!active) { e.currentTarget.style.background = 'rgba(255,255,255,0.05)'; e.currentTarget.style.color = 'var(--text)' } }}
+                                onMouseLeave={(e) => { if (!active) { e.currentTarget.style.background = 'transparent'; e.currentTarget.style.color = 'var(--text-secondary)' } }}
+                            >
+                                {item.icon}
+                                {!isCollapsed && <span style={{ fontSize: '14px', fontWeight: '500', whiteSpace: 'nowrap' }}>{item.label}</span>}
                             </div>
-                            <div style={{ fontSize: '12px', color: 'var(--text-secondary)' }}>
+                        )
+                    })}
+                </div>
+
+                {/* User button + popup */}
+                <div ref={userMenuRef} style={{ position: 'relative', borderTop: '1px solid var(--border)' }}>
+                    {showUserMenu && (
+                        <div style={{
+                            position: 'absolute',
+                            bottom: 'calc(100% + 6px)',
+                            left: isCollapsed ? '8px' : '8px',
+                            width: '280px',
+                            background: 'var(--card2)',
+                            border: '1px solid var(--border)',
+                            borderRadius: '14px',
+                            padding: '6px',
+                            boxShadow: '0 12px 32px rgba(0,0,0,0.5)',
+                            zIndex: 1000,
+                        }}>
+                            {/* Email */}
+                            <div style={{
+                                padding: '12px 12px 8px',
+                                fontSize: '13px',
+                                color: 'var(--text-secondary)',
+                                whiteSpace: 'nowrap',
+                                overflow: 'hidden',
+                                textOverflow: 'ellipsis',
+                            }}>
                                 {user?.email}
                             </div>
-                        </div>
-                    </div>
-                </div>
 
-                {/* Menu Items */}
-                <div style={{ flex: 1, padding: '0 0.75rem' }}>
-                    {menuItems.map((item) => (
-                        <div
-                            key={item.path}
-                            onClick={() => handleNavigation(item.path)}
-                            style={{
-                                display: 'flex',
-                                alignItems: 'center',
-                                gap: '12px',
-                                padding: '12px 16px',
-                                borderRadius: '12px',
-                                marginBottom: '4px',
-                                cursor: 'pointer',
-                                background: location.pathname === item.path ? 'var(--accent-dim)' : 'transparent',
-                                color: location.pathname === item.path ? 'var(--accent)' : 'var(--text-secondary)',
-                                transition: 'all 0.2s'
-                            }}
-                            onMouseEnter={(e) => {
-                                if (location.pathname !== item.path) {
-                                    e.currentTarget.style.background = 'rgba(255,255,255,0.05)'
-                                    e.currentTarget.style.color = 'var(--text)'
-                                }
-                            }}
-                            onMouseLeave={(e) => {
-                                if (location.pathname !== item.path) {
-                                    e.currentTarget.style.background = 'transparent'
-                                    e.currentTarget.style.color = 'var(--text-secondary)'
-                                }
-                            }}
-                        >
-                            {item.icon}
-                            <span style={{ fontSize: '14px', fontWeight: '500' }}>{item.label}</span>
-                        </div>
-                    ))}
-                </div>
+                            {renderRow({ icon: <Settings size={16} strokeWidth={2} />, label: 'Cài đặt', shortcut: '⇧Ctrl,' })}
+                            {renderRow({ icon: <Globe size={16} strokeWidth={2} />, label: 'Ngôn ngữ', trailing: <ChevronRight size={14} strokeWidth={2} /> })}
+                            {renderRow({ icon: <HelpCircle size={16} strokeWidth={2} />, label: 'Trợ giúp' })}
 
-                {/* Đăng xuất */}
-                <div style={{ padding: '1rem 0.75rem', borderTop: '1px solid var(--border)', marginTop: 'auto' }}>
-                    <div
-                        onClick={dangXuat}
+                            <div style={{ height: '1px', background: 'var(--border)', margin: '6px 8px' }} />
+
+                            {renderRow({ icon: <ArrowUpCircle size={16} strokeWidth={2} />, label: 'Nâng cấp gói' })}
+                            {renderRow({ icon: <Download size={16} strokeWidth={2} />, label: 'Ứng dụng & tiện ích' })}
+                            {renderRow({ icon: <Info size={16} strokeWidth={2} />, label: 'Tìm hiểu thêm', trailing: <ChevronRight size={14} strokeWidth={2} /> })}
+
+                            <div style={{ height: '1px', background: 'var(--border)', margin: '6px 8px' }} />
+
+                            {renderRow({
+                                icon: <LogOut size={16} strokeWidth={2} />,
+                                label: 'Đăng xuất',
+                                danger: true,
+                                onClick: () => { setShowUserMenu(false); dangXuat() },
+                            })}
+                        </div>
+                    )}
+
+                    {/* User button */}
+                    <div onClick={() => setShowUserMenu(prev => !prev)}
                         style={{
-                            display: 'flex',
-                            alignItems: 'center',
-                            gap: '12px',
-                            padding: '12px 16px',
-                            borderRadius: '12px',
+                            display: 'flex', alignItems: 'center',
+                            justifyContent: isCollapsed ? 'center' : 'space-between',
+                            padding: isCollapsed ? '12px 0' : '12px 14px',
                             cursor: 'pointer',
-                            color: '#ef4444',
-                            transition: 'all 0.2s'
+                            background: showUserMenu ? 'rgba(255,255,255,0.05)' : 'transparent',
+                            transition: 'background 0.15s'
                         }}
-                        onMouseEnter={(e) => e.currentTarget.style.background = 'rgba(239,68,68,0.1)'}
-                        onMouseLeave={(e) => e.currentTarget.style.background = 'transparent'}
+                        onMouseEnter={e => { if (!showUserMenu) e.currentTarget.style.background = 'rgba(255,255,255,0.04)' }}
+                        onMouseLeave={e => { if (!showUserMenu) e.currentTarget.style.background = 'transparent' }}
                     >
-                        <LogOut size={20} strokeWidth={2} />
-                        <span style={{ fontSize: '14px', fontWeight: '500' }}>Đăng xuất</span>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '10px', overflow: 'hidden' }}>
+                            <img
+                                src={user?.photoURL || `https://ui-avatars.com/api/?name=${user?.email || 'User'}&background=00d4a0&color=000`}
+                                alt="avatar"
+                                style={{ width: '32px', height: '32px', borderRadius: '50%', objectFit: 'cover', border: '2px solid #00d4a0', flexShrink: 0 }}
+                            />
+                            {!isCollapsed && (
+                                <div style={{ overflow: 'hidden' }}>
+                                    <div style={{ fontWeight: '600', fontSize: '13px', color: 'var(--text)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                                        {user?.displayName || user?.email?.split('@')[0] || 'User'}
+                                    </div>
+                                    <div style={{ fontSize: '11px', color: 'var(--text-secondary)' }}>Free plan</div>
+                                </div>
+                            )}
+                        </div>
+                        {!isCollapsed && (
+                            <ChevronUp size={14} strokeWidth={2} style={{
+                                color: 'var(--text-secondary)', flexShrink: 0,
+                                transform: showUserMenu ? 'rotate(180deg)' : 'none',
+                                transition: 'transform 0.2s'
+                            }} />
+                        )}
                     </div>
                 </div>
             </div>
@@ -177,9 +244,6 @@ function Sidebar({ isOpen, onClose }) {
                 @media (min-width: 1025px) {
                     .sidebar {
                         transform: translateX(0) !important;
-                    }
-                    .sidebar-close-btn {
-                        display: none !important;
                     }
                 }
             `}</style>

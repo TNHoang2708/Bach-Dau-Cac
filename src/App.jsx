@@ -1,4 +1,4 @@
-import { Routes, Route, useLocation, Navigate } from 'react-router-dom'
+import { Routes, Route, Navigate } from 'react-router-dom'
 import TrangChu from './pages/TrangChu'
 import DinhDuong from './pages/DinhDuong'
 import BMI from './pages/BMI'
@@ -8,35 +8,25 @@ import LandingPage from './pages/LandingPage'
 import Sidebar from './components/Sidebar'
 import { useAuth } from './context/AuthContext'
 import { useState, useEffect } from 'react'
-import { Menu } from 'lucide-react'
 import './App.css'
 
 function App() {
-  const location = useLocation()
   const { user } = useAuth()
-  const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
+  const [isCollapsed, setIsCollapsed] = useState(false)
+  const [sidebarOpen, setSidebarOpen] = useState(false) // chỉ dùng cho mobile
   const [showLogin, setShowLogin] = useState(false)
   const [isDesktop, setIsDesktop] = useState(window.innerWidth > 1024)
 
-  // Lắng nghe resize để tự động đóng sidebar khi kéo to lên
   useEffect(() => {
     const handleResize = () => {
       const desktop = window.innerWidth > 1024
       setIsDesktop(desktop)
-      // Nếu đang là desktop, đóng mobile menu
-      if (desktop && mobileMenuOpen) {
-        setMobileMenuOpen(false)
-      }
-      // Nếu đang là mobile và sidebar đang mở nhưng kéo to quá breakpoint thì đóng
-      if (!desktop && mobileMenuOpen && window.innerWidth > 1024) {
-        setMobileMenuOpen(false)
-      }
+      if (!desktop) setSidebarOpen(false)
     }
     window.addEventListener('resize', handleResize)
     return () => window.removeEventListener('resize', handleResize)
-  }, [mobileMenuOpen])
+  }, [])
 
-  // Chưa đăng nhập → Landing page hoặc trang đăng nhập
   if (!user) {
     if (showLogin) return <DangNhap onBack={() => setShowLogin(false)} />
     return (
@@ -46,43 +36,29 @@ function App() {
     )
   }
 
+  const sidebarWidth = isDesktop ? (isCollapsed ? 64 : 280) : 0
+
   return (
     <div style={{ display: 'flex', minHeight: '100vh' }}>
-      {/* Sidebar */}
-      <Sidebar isOpen={mobileMenuOpen} onClose={() => setMobileMenuOpen(false)} />
-
-      {/* Nút menu cho mobile - chỉ hiện khi không phải desktop */}
-      {!isDesktop && (
-        <button
-          onClick={() => setMobileMenuOpen(true)}
-          style={{
-            position: 'fixed',
-            top: '1rem',
-            left: '1rem',
-            zIndex: 100,
-            width: '40px',
-            height: '40px',
-            borderRadius: '10px',
-            background: 'var(--card)',
-            border: '1px solid var(--border)',
-            color: 'var(--text)',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            cursor: 'pointer'
-          }}
-          className="menu-toggle"
-        >
-          <Menu size={20} />
-        </button>
-      )}
+      <Sidebar
+        isOpen={isDesktop ? true : sidebarOpen}
+        isCollapsed={isDesktop ? isCollapsed : false}
+        isDesktop={isDesktop}
+        onToggleCollapse={() => setIsCollapsed(prev => !prev)}
+        onClose={() => setSidebarOpen(false)}
+      />
 
       {/* Main Content */}
-      <div className="main-content" style={{
-        flex: 1,
-        padding: '2rem',
-      }}>
-        <div className="container" style={{ maxWidth: '1200px', margin: '0 auto' }}>
+      <div
+        className="main-content"
+        style={{
+          flex: 1,
+          padding: '2rem',
+          marginLeft: `${sidebarWidth}px`,
+          transition: 'margin-left 0.25s cubic-bezier(0.4,0,0.2,1)',
+        }}
+      >
+        <div style={{ width: '100%' }}>
           <Routes>
             <Route path="/" element={<TrangChu />} />
             <Route path="/dinh-duong" element={<DinhDuong />} />
@@ -94,39 +70,9 @@ function App() {
       </div>
 
       <style>{`
-        /* DESKTOP (> 1024px): Sidebar luôn hiện */
-        @media (min-width: 1025px) {
-          .sidebar {
-            transform: translateX(0) !important;
-          }
-          .main-content {
-            margin-left: 280px !important;
-            width: calc(100% - 280px) !important;
-          }
-        }
-
-        /* TABLET (769px - 1024px): Sidebar luôn hiện, có nút X */
-        @media (min-width: 769px) and (max-width: 1024px) {
-          .sidebar {
-            transform: translateX(0) !important;
-          }
-          .main-content {
-            margin-left: 280px !important;
-            width: calc(100% - 280px) !important;
-          }
-        }
-
-        /* MOBILE (<= 768px): Sidebar ẩn mặc định */
         @media (max-width: 768px) {
-          .sidebar {
-            transform: translateX(-100%) !important;
-          }
-          .sidebar.open {
-            transform: translateX(0) !important;
-          }
           .main-content {
             margin-left: 0 !important;
-            width: 100% !important;
             padding: 1rem !important;
           }
         }

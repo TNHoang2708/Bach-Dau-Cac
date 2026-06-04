@@ -140,7 +140,7 @@ function DinhDuong() {
     }, [])
 
     return (
-        <div>
+        <div style={{ width: '100%' }}>
             <div className="card">
                 <div className="card-title" style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
                     <Camera size={16} /> Phân tích bữa ăn với AI

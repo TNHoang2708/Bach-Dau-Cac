@@ -32,7 +32,7 @@ function BMI() {
     const percentage = ketQua ? Math.min(Math.max(((ketQua.bmi - 10) / 30) * 100, 0), 100) : 0
 
     return (
-        <div>
+        <div style={{ width: '100%' }}>
             <div className="card">
                 <div className="card-title" style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
                     <BarChart2 size={16} /> Tính chỉ số BMI

@@ -60,7 +60,7 @@ function NhatKy() {
     const formatNgay = (str) => { if (!str) return ''; const [y, m, d] = str.split('-'); return `${d}/${m}/${y}` }
 
     return (
-        <div>
+        <div style={{ width: '100%' }}>
             <div className="card" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                 <div>
                     <div className="card-title" style={{ marginBottom: '4px', display: 'flex', alignItems: 'center', gap: '8px' }}>

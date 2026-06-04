@@ -549,3 +549,12 @@ body:has(.landing-page) h1 {
     padding: 0 1rem;
   }
 }
+
+/* Pages fill full available width */
+.main-content > div > div {
+  width: 100%;
+}
+
+.card {
+  width: 100%;
+}
