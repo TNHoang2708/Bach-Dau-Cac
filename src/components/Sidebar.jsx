@@ -1,4 +1,4 @@
-import { Home, Salad, Scale, BookOpen, LogOut, PanelLeft, Settings, HelpCircle, ChevronUp, Globe, ArrowUpCircle, Download, Info, ChevronRight } from 'lucide-react'
+import { Home, Salad, Scale, BookOpen, LogOut, PanelLeft, Settings, HelpCircle, ChevronUp, Globe, ArrowUpCircle, Download, Info, ChevronRight, MessageSquare } from 'lucide-react'
 import { useAuth } from '../context/AuthContext'
 import { useNavigate, useLocation } from 'react-router-dom'
 import { useState, useRef, useEffect } from 'react'
@@ -13,6 +13,7 @@ function Sidebar({ isOpen, isCollapsed, isDesktop, onToggleCollapse, onClose }) 
         { path: '/dinh-duong', icon: <Salad size={20} strokeWidth={2} />, label: 'Dinh dưỡng' },
         { path: '/bmi', icon: <Scale size={20} strokeWidth={2} />, label: 'BMI' },
         { path: '/nhat-ky', icon: <BookOpen size={20} strokeWidth={2} />, label: 'Nhật ký' },
+        { path: '/feedback', icon: <MessageSquare size={20} strokeWidth={2} />, label: 'Feedback' },
     ]
 
     const [showUserMenu, setShowUserMenu] = useState(false)

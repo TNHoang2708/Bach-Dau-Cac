@@ -6,9 +6,11 @@ import DangNhap from './pages/DangNhap'
 import NhatKy from './pages/NhatKy'
 import LandingPage from './pages/LandingPage'
 import Sidebar from './components/Sidebar'
+import ChatBox from './components/ChatBox'
 import { useAuth } from './context/AuthContext'
 import { useState, useEffect } from 'react'
 import './App.css'
+import Feedback from './pages/Feedback'
 
 function App() {
   const { user } = useAuth()
@@ -65,9 +67,13 @@ function App() {
             <Route path="/bmi" element={<BMI />} />
             <Route path="/nhat-ky" element={<NhatKy />} />
             <Route path="*" element={<Navigate to="/" />} />
+            <Route path="/feedback" element={<Feedback />} />
           </Routes>
         </div>
       </div>
+
+      {/* Floating AI ChatBox */}
+      {user && <ChatBox />}
 
       <style>{`
         @media (max-width: 768px) {
