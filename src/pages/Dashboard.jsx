@@ -102,7 +102,7 @@ function Dashboard() {
     const maxCalories = Math.max(...weeklyData.map(d => d.calories), dailyGoal.calories)
 
     const macroColors = {
-        protein: '#00d4a0',
+        protein: 'var(--accent)',
         carbs: '#60a5fa',
         fat: '#f97316',
     }
@@ -137,7 +137,7 @@ function Dashboard() {
                         icon: <Target size={16} />,
                         label: 'Calo hôm nay',
                         value: `${today.calories}`,
-                        color: '#00d4a0',
+                        color: 'var(--accent)',
                         sub: `/ ${dailyGoal.calories} kcal (${caloriePercent}%)`
                     },
                     {

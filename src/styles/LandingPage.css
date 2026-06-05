@@ -19,7 +19,7 @@
      }
 
      ::-webkit-scrollbar-thumb {
-         background: #00d4a0;
+         background: var(--accent);
          border-radius: 2px;
      }
 
@@ -33,7 +33,7 @@
          font-family: 'Barlow Condensed', sans-serif;
          letter-spacing: 0.1em;
          text-transform: uppercase;
-         background: #00d4a0;
+         background: var(--accent);
          color: #000;
          border: none;
          border-radius: 4px;
@@ -66,8 +66,8 @@
      }
 
      .btn-ghost:hover {
-         border-color: #00d4a0;
-         color: #00d4a0;
+         border-color: var(--accent);
+         color: var(--accent);
      }
 
      .feature-card {

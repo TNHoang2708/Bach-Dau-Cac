@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { useApp } from '../context/AppContext'
 import { useAuth } from '../context/AuthContext'
-import { User, Ruler, Weight, Calendar, Activity, Heart, Target, CheckCircle } from 'lucide-react'
+import { User } from 'lucide-react'
 
 const MUC_TIEU_OPTIONS = ['Tăng cơ', 'Giảm mỡ', 'Tăng cơ/Giảm mỡ', 'Tăng sức bền']
 const KINH_NGHIEM_OPTIONS = ['Chưa từng tập', 'Dưới 1 năm', '1-3 năm', 'Trên 3 năm']
@@ -19,7 +19,7 @@ function phanLoaiBMI(bmi) {
     if (!bmi) return null
     const b = parseFloat(bmi)
     if (b < 18.5) return { label: 'Thiếu cân', color: '#60a5fa' }
-    if (b < 23) return { label: 'Bình thường', color: '#00d4a0' }
+    if (b < 23) return { label: 'Bình thường', color: 'var(--accent)' }
     if (b < 25) return { label: 'Thừa cân nhẹ', color: '#f59e0b' }
     if (b < 30) return { label: 'Thừa cân', color: '#f97316' }
     return { label: 'Béo phì', color: '#ef4444' }
@@ -48,17 +48,9 @@ function Profile() {
         mucTieu, setMucTieu,
     } = useApp()
 
-    const [saved, setSaved] = useState(false)
-
     const bmi = tinhBMI(canNang, chieuCao)
     const bmiInfo = phanLoaiBMI(bmi)
     const tdee = tinhTDEE(canNang, chieuCao, tuoi, mucTieu)
-
-    const handleSave = () => {
-        // AppContext auto-save rồi, chỉ cần show feedback
-        setSaved(true)
-        setTimeout(() => setSaved(false), 2000)
-    }
 
     return (
         <div>
@@ -126,127 +118,89 @@ function Profile() {
                     )}
                 </div>
             )}
-
-            {/* Form thông tin */}
             <div className="card" style={{ marginBottom: '1.5rem' }}>
-                <div className="card-title" style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '1.25rem' }}>
-                    <User size={14} /> Thông tin cơ thể
+                <div className="card-title">
+                    Thống kê cá nhân
                 </div>
 
-                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '12px', marginBottom: '1rem' }}>
-                    <div>
-                        <label style={{ fontSize: '12px', color: 'var(--text-secondary)', display: 'flex', alignItems: 'center', gap: '4px', marginBottom: '6px' }}>
-                            <Calendar size={12} /> Tuổi
-                        </label>
-                        <input
-                            type="number"
-                            value={tuoi}
-                            onChange={e => setTuoi(e.target.value)}
-                            placeholder="20"
-                            min="10" max="100"
-                        />
-                    </div>
-                    <div>
-                        <label style={{ fontSize: '12px', color: 'var(--text-secondary)', display: 'flex', alignItems: 'center', gap: '4px', marginBottom: '6px' }}>
-                            <Weight size={12} /> Cân nặng (kg)
-                        </label>
-                        <input
-                            type="number"
-                            value={canNang}
-                            onChange={e => setCanNang(e.target.value)}
-                            placeholder="70"
-                            min="30" max="200"
-                        />
-                    </div>
-                    <div>
-                        <label style={{ fontSize: '12px', color: 'var(--text-secondary)', display: 'flex', alignItems: 'center', gap: '4px', marginBottom: '6px' }}>
-                            <Ruler size={12} /> Chiều cao (cm)
-                        </label>
-                        <input
-                            type="number"
-                            value={chieuCao}
-                            onChange={e => setChieuCao(e.target.value)}
-                            placeholder="170"
-                            min="100" max="250"
-                        />
-                    </div>
-                </div>
-
-                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
-                    <div>
-                        <label style={{ fontSize: '12px', color: 'var(--text-secondary)', display: 'flex', alignItems: 'center', gap: '4px', marginBottom: '6px' }}>
-                            <Activity size={12} /> Kinh nghiệm tập luyện
-                        </label>
-                        <select value={kinhNghiem} onChange={e => setKinhNghiem(e.target.value)}>
-                            {KINH_NGHIEM_OPTIONS.map(o => <option key={o}>{o}</option>)}
-                        </select>
-                    </div>
-                    <div>
-                        <label style={{ fontSize: '12px', color: 'var(--text-secondary)', display: 'flex', alignItems: 'center', gap: '4px', marginBottom: '6px' }}>
-                            <Heart size={12} /> Tình trạng sức khỏe
-                        </label>
-                        <select value={benhLy} onChange={e => setBenhLy(e.target.value)}>
-                            {BENH_LY_OPTIONS.map(o => <option key={o}>{o}</option>)}
-                        </select>
-                    </div>
-                </div>
-            </div>
-
-            {/* Mục tiêu */}
-            <div className="card" style={{ marginBottom: '1.5rem' }}>
-                <div className="card-title" style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '1.25rem' }}>
-                    <Target size={14} /> Mục tiêu tập luyện
-                </div>
-                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '10px' }}>
-                    {MUC_TIEU_OPTIONS.map(option => (
+                <div
+                    style={{
+                        display: 'grid',
+                        gridTemplateColumns: 'repeat(3,1fr)',
+                        gap: '12px'
+                    }}
+                >
+                    <div
+                        style={{
+                            background: 'var(--card2)',
+                            padding: '16px',
+                            borderRadius: '12px',
+                            textAlign: 'center'
+                        }}
+                    >
                         <div
-                            key={option}
-                            onClick={() => setMucTieu(option)}
                             style={{
-                                padding: '14px',
-                                borderRadius: '12px',
-                                border: `1px solid ${mucTieu === option ? 'var(--accent)' : 'var(--border)'}`,
-                                background: mucTieu === option ? 'var(--accent-dim)' : 'var(--card2)',
-                                cursor: 'pointer',
-                                transition: 'all 0.2s',
-                                display: 'flex',
-                                alignItems: 'center',
-                                gap: '8px',
-                                fontSize: '14px',
-                                fontWeight: mucTieu === option ? 600 : 400,
-                                color: mucTieu === option ? 'var(--accent)' : 'var(--text)',
+                                fontSize: '26px',
+                                fontWeight: 700,
+                                color: 'var(--accent)'
                             }}
                         >
-                            <div style={{
-                                width: '18px', height: '18px', borderRadius: '50%',
-                                border: `2px solid ${mucTieu === option ? 'var(--accent)' : 'var(--border)'}`,
-                                background: mucTieu === option ? 'var(--accent)' : 'transparent',
-                                flexShrink: 0,
-                                display: 'flex', alignItems: 'center', justifyContent: 'center'
-                            }}>
-                                {mucTieu === option && <div style={{ width: '6px', height: '6px', borderRadius: '50%', background: '#000' }} />}
-                            </div>
-                            {option}
+                            12
                         </div>
-                    ))}
+
+                        <div style={{ color: 'var(--text-secondary)' }}>
+                            Lịch tập đã tạo
+                        </div>
+                    </div>
+
+                    <div
+                        style={{
+                            background: 'var(--card2)',
+                            padding: '16px',
+                            borderRadius: '12px',
+                            textAlign: 'center'
+                        }}
+                    >
+                        <div
+                            style={{
+                                fontSize: '26px',
+                                fontWeight: 700,
+                                color: '#60a5fa'
+                            }}
+                        >
+                            35
+                        </div>
+
+                        <div style={{ color: 'var(--text-secondary)' }}>
+                            Bữa ăn phân tích
+                        </div>
+                    </div>
+
+                    <div
+                        style={{
+                            background: 'var(--card2)',
+                            padding: '16px',
+                            borderRadius: '12px',
+                            textAlign: 'center'
+                        }}
+                    >
+                        <div
+                            style={{
+                                fontSize: '26px',
+                                fontWeight: 700,
+                                color: '#f59e0b'
+                            }}
+                        >
+                            18
+                        </div>
+
+                        <div style={{ color: 'var(--text-secondary)' }}>
+                            Ngày hoạt động
+                        </div>
+                    </div>
                 </div>
             </div>
 
-            {/* Save button */}
-            <button
-                onClick={handleSave}
-                style={{
-                    width: '100%',
-                    display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px',
-                    background: saved ? 'transparent' : 'var(--accent)',
-                    color: saved ? 'var(--accent)' : '#000',
-                    border: saved ? '1px solid var(--accent)' : 'none',
-                    transition: 'all 0.3s',
-                    fontWeight: 700,
-                }}
-            >
-                {saved ? <><CheckCircle size={16} /> Đã lưu!</> : 'Lưu thông tin'}
-            </button>
         </div>
     )
 }

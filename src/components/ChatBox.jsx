@@ -216,7 +216,7 @@ Câu hỏi: ${msg}`
             width: '60px',
             height: '60px',
             borderRadius: '50%',
-            background: 'linear-gradient(135deg, #00d4a0, #00a878)',
+            background: 'linear-gradient(135deg, var(--accent), #2563eb)',
             border: 'none',
             cursor: 'pointer',
             display: 'flex',
@@ -279,7 +279,7 @@ Câu hỏi: ${msg}`
         >
           {/* Header */}
           <div style={{
-            background: 'linear-gradient(135deg, #00d4a0 0%, #00a878 100%)',
+            background: 'linear-gradient(135deg, var(--accent) 0%, #2563eb 100%)',
             padding: '14px 16px',
             display: 'flex',
             alignItems: 'center',
@@ -371,7 +371,7 @@ Câu hỏi: ${msg}`
                       <div style={{ display: 'flex', alignItems: 'flex-end', gap: '6px' }}>
                         <div style={{
                           width: '26px', height: '26px', borderRadius: '50%',
-                          background: 'linear-gradient(135deg, #00d4a0, #00a878)',
+                          background: 'linear-gradient(135deg, var(--accent), #2563eb)',
                           display: 'flex', alignItems: 'center', justifyContent: 'center',
                           flexShrink: 0,
                         }}>
@@ -398,7 +398,7 @@ Câu hỏi: ${msg}`
                         maxWidth: '260px',
                         padding: '10px 14px',
                         borderRadius: '16px 4px 16px 16px',
-                        background: 'linear-gradient(135deg, #00d4a0, #00a878)',
+                        background: 'linear-gradient(135deg, var(--accent), #2563eb)',
                         color: '#000',
                         fontSize: '13.5px',
                         lineHeight: '1.65',
@@ -425,7 +425,7 @@ Câu hỏi: ${msg}`
                   <div className="chat-msg-ai" style={{ display: 'flex', alignItems: 'flex-end', gap: '6px' }}>
                     <div style={{
                       width: '26px', height: '26px', borderRadius: '50%',
-                      background: 'linear-gradient(135deg, #00d4a0, #00a878)',
+                      background: 'linear-gradient(135deg, var(--accent), #2563eb)',
                       display: 'flex', alignItems: 'center', justifyContent: 'center',
                       flexShrink: 0,
                     }}>
@@ -554,7 +554,7 @@ Câu hỏi: ${msg}`
                     width: '42px',
                     height: '42px',
                     borderRadius: '14px',
-                    background: 'linear-gradient(135deg, #00d4a0, #00a878)',
+                    background: 'linear-gradient(135deg, var(--accent), #2563eb)',
                     border: 'none',
                     cursor: 'pointer',
                     display: 'flex',

@@ -70,7 +70,7 @@ function DangNhap({ onBack }) {
                         transition: 'all 0.2s ease',
                         zIndex: 100,
                     }}
-                    onMouseEnter={e => { e.currentTarget.style.borderColor = '#00d4a0'; e.currentTarget.style.color = '#00d4a0' }}
+                    onMouseEnter={e => { e.currentTarget.style.borderColor = 'var(--accent)'; e.currentTarget.style.color = 'var(--accent)' }}
                     onMouseLeave={e => { e.currentTarget.style.borderColor = 'rgba(255,255,255,0.12)'; e.currentTarget.style.color = 'rgba(255,255,255,0.7)' }}
                 >
                     <ArrowLeft size={16} /> Quay lại
@@ -96,11 +96,11 @@ function DangNhap({ onBack }) {
                         display: 'flex', alignItems: 'center', justifyContent: 'center',
                         margin: '0 auto 12px',
                     }}>
-                        <Dumbbell size={26} color='#00d4a0' />
+                        <Dumbbell size={26} color='var(--accent)' />
                     </div>
                     <h2 style={{
                         fontSize: '22px', fontWeight: '700',
-                        background: 'linear-gradient(135deg, #fff 0%, #00d4a0 100%)',
+                        background: 'linear-gradient(135deg, #fff 0%, var(--accent) 100%)',
                         WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent',
                         marginBottom: '4px'
                     }}>Gym Planner AI</h2>
@@ -121,7 +121,7 @@ function DangNhap({ onBack }) {
                     ].map((tab, i) => (
                         <button key={i} onClick={() => { setIsLogin(tab.val); setLoi('') }} style={{
                             padding: '10px', margin: 0,
-                            background: isLogin === tab.val ? '#00d4a0' : 'transparent',
+                            background: isLogin === tab.val ? 'var(--accent)' : 'transparent',
                             color: isLogin === tab.val ? '#000' : '#aaa',
                             borderRadius: '10px', fontSize: '14px', fontWeight: '600',
                             display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px',
@@ -186,7 +186,7 @@ function DangNhap({ onBack }) {
                     opacity: loading ? 0.7 : 1, width: '100%',
                     transition: 'border-color 0.2s',
                 }}
-                    onMouseEnter={e => e.currentTarget.style.borderColor = '#00d4a0'}
+                    onMouseEnter={e => e.currentTarget.style.borderColor = 'var(--accent)'}
                     onMouseLeave={e => e.currentTarget.style.borderColor = '#2a2a2a'}
                 >
                     <svg width="18" height="18" viewBox="0 0 48 48">

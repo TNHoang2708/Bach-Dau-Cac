@@ -153,7 +153,7 @@ function Feedback() {
                                 </div>
                                 <p style={{ fontSize: '14px', color: 'var(--text-secondary)', lineHeight: 1.6, marginBottom: '12px' }}>"{t.noiDung}"</p>
                                 <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                                    <img src={`https://ui-avatars.com/api/?name=${t.tenUser}&background=00d4a0&color=000&size=32`} alt=""
+                                    <img src={`https://ui-avatars.com/api/?name=${t.tenUser}&background=3b82f6&color=000&size=32`} alt=""
                                         style={{ width: '32px', height: '32px', borderRadius: '50%' }} />
                                     <div>
                                         <div style={{ fontSize: '13px', fontWeight: '600' }}>{t.tenUser}</div>

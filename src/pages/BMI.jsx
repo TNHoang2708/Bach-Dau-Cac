@@ -18,7 +18,7 @@ function BMI() {
         const bmiRound = Math.round(bmi * 10) / 10
         let phanLoai = '', mauSac = '', moTa = '', goiY = ''
         if (bmi < 18.5) { phanLoai = 'Thiếu cân'; mauSac = '#60a5fa'; moTa = 'Bạn đang thiếu cân so với chuẩn.'; goiY = 'Tăng cường ăn uống, bổ sung protein và calo. Tập các bài tăng cơ như squat, deadlift, bench press.' }
-        else if (bmi < 23) { phanLoai = 'Bình thường'; mauSac = '#00d4a0'; moTa = 'Cân nặng của bạn đang ở mức lý tưởng!'; goiY = 'Duy trì chế độ ăn cân bằng và tập luyện đều đặn 3-4 buổi/tuần.' }
+        else if (bmi < 23) { phanLoai = 'Bình thường'; mauSac = 'var(--accent)'; moTa = 'Cân nặng của bạn đang ở mức lý tưởng!'; goiY = 'Duy trì chế độ ăn cân bằng và tập luyện đều đặn 3-4 buổi/tuần.' }
         else if (bmi < 25) { phanLoai = 'Thừa cân nhẹ'; mauSac = '#fbbf24'; moTa = 'Bạn đang ở ngưỡng thừa cân nhẹ.'; goiY = 'Giảm tinh bột, tăng rau xanh và protein. Cardio 30 phút/ngày kết hợp tập tạ.' }
         else if (bmi < 30) { phanLoai = 'Thừa cân'; mauSac = '#f97316'; moTa = 'Bạn đang thừa cân, cần điều chỉnh.'; goiY = 'Tạo thâm hụt calo 300-500 kcal/ngày. Cardio đều đặn, hạn chế đồ ngọt và đồ chiên rán.' }
         else { phanLoai = 'Béo phì'; mauSac = '#ef4444'; moTa = 'Bạn đang ở mức béo phì, cần thay đổi ngay.'; goiY = 'Tham khảo chuyên gia dinh dưỡng. Bắt đầu với đi bộ 30-45 phút/ngày, giảm dần calo nạp vào.' }
@@ -77,7 +77,7 @@ function BMI() {
                     <div style={{ fontSize: '20px', fontWeight: '700', color: ketQua.mauSac, marginBottom: '8px' }}>{ketQua.phanLoai}</div>
                     <div style={{ color: 'var(--text-secondary)', fontSize: '14px', marginBottom: '24px' }}>{ketQua.moTa}</div>
                     <div style={{ marginBottom: '24px' }}>
-                        <div style={{ height: '12px', borderRadius: '99px', background: 'linear-gradient(to right, #60a5fa, #00d4a0, #fbbf24, #f97316, #ef4444)', position: 'relative', marginBottom: '8px' }}>
+                        <div style={{ height: '12px', borderRadius: '99px', background: 'linear-gradient(to right, #60a5fa, var(--accent), #fbbf24, #f97316, #ef4444)', position: 'relative', marginBottom: '8px' }}>
                             <div style={{ position: 'absolute', left: `${percentage}%`, top: '-4px', width: '20px', height: '20px', background: ketQua.mauSac, borderRadius: '50%', border: '3px solid #fff', transform: 'translateX(-50%)', boxShadow: `0 0 10px ${ketQua.mauSac}` }} />
                         </div>
                         <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '11px', color: 'var(--text-secondary)' }}>
@@ -109,7 +109,7 @@ function BMI() {
                 </div>
                 {[
                     { range: '< 18.5', label: 'Thiếu cân', color: '#60a5fa' },
-                    { range: '18.5 – 22.9', label: 'Bình thường', color: '#00d4a0' },
+                    { range: '18.5 – 22.9', label: 'Bình thường', color: 'var(--accent)' },
                     { range: '23 – 24.9', label: 'Thừa cân nhẹ', color: '#fbbf24' },
                     { range: '25 – 29.9', label: 'Thừa cân', color: '#f97316' },
                     { range: '≥ 30', label: 'Béo phì', color: '#ef4444' },

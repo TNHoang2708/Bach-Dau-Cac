@@ -76,7 +76,7 @@ function LandingPage({ onGetStarted }) {
             <nav className="landing-navbar">
                 {/* Logo */}
                 <div className="landing-logo">
-                    <Dumbbell size={22} color='#00d4a0' strokeWidth={2.5} />
+                    <Dumbbell size={22} color='var(--accent)' strokeWidth={2.5} />
                     <span style={{ fontWeight: '900', fontSize: '18px', letterSpacing: '0.05em', textTransform: 'uppercase' }}>Gym Planner AI</span>
                 </div>
 
@@ -93,7 +93,7 @@ function LandingPage({ onGetStarted }) {
                             fontFamily: "'Barlow', sans-serif",
                             whiteSpace: 'nowrap'
                         }}
-                            onMouseEnter={e => e.currentTarget.style.color = '#00d4a0'}
+                            onMouseEnter={e => e.currentTarget.style.color = 'var(--accent)'}
                             onMouseLeave={e => e.currentTarget.style.color = 'rgba(255,255,255,0.7)'}
                         >{item.label}</span>
                     ))}
@@ -171,11 +171,11 @@ function LandingPage({ onGetStarted }) {
                 <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(105deg, rgba(8,8,8,1) 40%, rgba(8,8,8,0.3) 70%, transparent 100%)' }} />
                 <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(to top, rgba(0,212,160,0.15) 0%, transparent 40%)' }} />
                 <div style={{ position: 'absolute', inset: 0, background: 'radial-gradient(ellipse at 70% 50%, transparent 30%, rgba(8,8,8,0.6) 100%)' }} />
-                <div style={{ position: 'absolute', left: 0, top: '20%', bottom: '20%', width: '3px', background: 'linear-gradient(to bottom, transparent, #00d4a0, transparent)' }} />
+                <div style={{ position: 'absolute', left: 0, top: '20%', bottom: '20%', width: '3px', background: 'linear-gradient(to bottom, transparent, var(--accent), transparent)' }} />
 
                 <div className="hero-content">
                     <h1 className="hero-title">
-                        SHAPE YOUR<br /><span style={{ color: '#00d4a0' }}>BODY</span><br />WITH AI
+                        SHAPE YOUR<br /><span style={{ color: 'var(--accent)' }}>BODY</span><br />WITH AI
                     </h1>
                     <p className="hero-description">
                         Lịch tập cá nhân hóa, phân tích dinh dưỡng từ ảnh thông minh — hoàn toàn miễn phí.
@@ -192,7 +192,7 @@ function LandingPage({ onGetStarted }) {
                 <div style={{ position: 'absolute', right: '5rem', bottom: '4rem', display: 'flex', gap: '4rem', animation: 'fadeInUp 0.8s ease 0.5s both' }}>
                     {stats.map((s, i) => (
                         <div key={i}>
-                            <div style={{ fontSize: '40px', fontWeight: '900', color: '#00d4a0', lineHeight: 1 }}>{s.number}</div>
+                            <div style={{ fontSize: '40px', fontWeight: '900', color: 'var(--accent)', lineHeight: 1 }}>{s.number}</div>
                             <div style={{ fontSize: '11px', fontFamily: "'Barlow', sans-serif", color: 'rgba(255,255,255,0.35)', textTransform: 'uppercase', letterSpacing: '0.1em', marginTop: '6px' }}>{s.label}</div>
                         </div>
                     ))}
@@ -210,8 +210,8 @@ function LandingPage({ onGetStarted }) {
                     className="features-header"
                     style={anim('feat-title')}
                 >
-                    <p style={{ color: '#00d4a0', fontWeight: '700', fontSize: '12px', textTransform: 'uppercase', letterSpacing: '0.15em', marginBottom: '12px' }}>Tính năng</p>
-                    <h2 style={{ fontSize: 'clamp(24px, 3vw, 48px)', fontWeight: '900', letterSpacing: '-1px', textTransform: 'uppercase', lineHeight: 1 }}>MỌI THỨ ĐỂ <span style={{ color: '#00d4a0' }}>BỨT PHÁ</span></h2>
+                    <p style={{ color: 'var(--accent)', fontWeight: '700', fontSize: '12px', textTransform: 'uppercase', letterSpacing: '0.15em', marginBottom: '12px' }}>Tính năng</p>
+                    <h2 style={{ fontSize: 'clamp(24px, 3vw, 48px)', fontWeight: '900', letterSpacing: '-1px', textTransform: 'uppercase', lineHeight: 1 }}>MỌI THỨ ĐỂ <span style={{ color: 'var(--accent)' }}>BỨT PHÁ</span></h2>
                 </div>
                 <div className="features-grid">
                     {features.map((f, i) => (
@@ -235,9 +235,9 @@ function LandingPage({ onGetStarted }) {
                     className="why-header"
                     style={anim('why-title')}
                 >
-                    <p style={{ color: '#00d4a0', fontWeight: '700', fontSize: '12px', textTransform: 'uppercase', letterSpacing: '0.15em', marginBottom: '12px' }}>Tại sao chọn chúng tôi</p>
+                    <p style={{ color: 'var(--accent)', fontWeight: '700', fontSize: '12px', textTransform: 'uppercase', letterSpacing: '0.15em', marginBottom: '12px' }}>Tại sao chọn chúng tôi</p>
                     <h2 style={{ fontSize: 'clamp(24px, 3vw, 48px)', fontWeight: '900', letterSpacing: '-1px', textTransform: 'uppercase', lineHeight: 1 }}>
-                        ĐƠN GIẢN. <span style={{ color: '#00d4a0' }}>THÔNG MINH.</span> HIỆU QUẢ.
+                        ĐƠN GIẢN. <span style={{ color: 'var(--accent)' }}>THÔNG MINH.</span> HIỆU QUẢ.
                     </h2>
                 </div>
                 <div className="why-grid">
@@ -248,7 +248,7 @@ function LandingPage({ onGetStarted }) {
                     ].map((item, i) => (
                         <div key={i} ref={setRef(`why-${i}`)} className="feature-card" style={{ ...anim(`why-${i}`, i * 0.12) }}>
                             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '1.5rem' }}>
-                                <div style={{ color: '#00d4a0' }}>{item.icon}</div>
+                                <div style={{ color: 'var(--accent)' }}>{item.icon}</div>
                                 <span style={{ fontSize: '10px', fontWeight: '700', letterSpacing: '0.1em', textTransform: 'uppercase', color: 'rgba(0,212,160,0.6)', border: '1px solid rgba(0,212,160,0.2)', borderRadius: '2px', padding: '3px 8px' }}>{item.tag}</span>
                             </div>
                             <h3 style={{ fontSize: '20px', fontWeight: '800', textTransform: 'uppercase', letterSpacing: '0.02em', marginBottom: '10px' }}>{item.title}</h3>
@@ -265,8 +265,8 @@ function LandingPage({ onGetStarted }) {
                 <div ref={setRef('cta')} className="cta-content"
                     style={anim('cta')}
                 >
-                    <p style={{ color: '#00d4a0', fontWeight: '700', fontSize: '12px', textTransform: 'uppercase', letterSpacing: '0.15em', marginBottom: '1.5rem' }}>Sẵn sàng chưa?</p>
-                    <h2 style={{ fontSize: 'clamp(20px, 2.5vw, 36px)', fontWeight: '900', letterSpacing: '-1px', textTransform: 'uppercase', lineHeight: 1 }}>SẴN SÀNG<br /><span style={{ color: '#00d4a0' }}>BỨT GIỚI HẠN?</span></h2>
+                    <p style={{ color: 'var(--accent)', fontWeight: '700', fontSize: '12px', textTransform: 'uppercase', letterSpacing: '0.15em', marginBottom: '1.5rem' }}>Sẵn sàng chưa?</p>
+                    <h2 style={{ fontSize: 'clamp(20px, 2.5vw, 36px)', fontWeight: '900', letterSpacing: '-1px', textTransform: 'uppercase', lineHeight: 1 }}>SẴN SÀNG<br /><span style={{ color: 'var(--accent)' }}>BỨT GIỚI HẠN?</span></h2>
                     <p className="cta-description">Miễn phí hoàn toàn. Không cần thẻ tín dụng.</p>
                     <button className="btn-primary" onClick={onGetStarted} style={{ fontSize: '17px', padding: '18px 56px' }}><Zap size={17} fill="#000" strokeWidth={0} /> Bắt đầu ngay</button>
                 </div>
@@ -279,7 +279,7 @@ function LandingPage({ onGetStarted }) {
                     {/* Logo + desc + social */}
                     <div>
                         <div className="footer-logo">
-                            <Dumbbell size={20} color='#00d4a0' />
+                            <Dumbbell size={20} color='var(--accent)' />
                             <span style={{ fontWeight: '900', fontSize: '16px', textTransform: 'uppercase' }}>Gym Planner AI</span>
                         </div>
                         <p style={{ fontSize: '13px', fontFamily: "'Barlow', sans-serif", color: 'rgba(255,255,255,0.4)', lineHeight: 1.7, marginBottom: '1.5rem' }}>
@@ -288,7 +288,7 @@ function LandingPage({ onGetStarted }) {
                         <div className="footer-social">
                             {['IG', 'TK', 'FB', 'YT'].map((s, i) => (
                                 <div key={i} style={{ width: '34px', height: '34px', borderRadius: '8px', border: '1px solid rgba(255,255,255,0.1)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '11px', fontWeight: '700', color: 'rgba(255,255,255,0.4)', cursor: 'pointer', transition: 'all 0.2s' }}
-                                    onMouseEnter={e => { e.currentTarget.style.borderColor = '#00d4a0'; e.currentTarget.style.color = '#00d4a0' }}
+                                    onMouseEnter={e => { e.currentTarget.style.borderColor = 'var(--accent)'; e.currentTarget.style.color = 'var(--accent)' }}
                                     onMouseLeave={e => { e.currentTarget.style.borderColor = 'rgba(255,255,255,0.1)'; e.currentTarget.style.color = 'rgba(255,255,255,0.4)' }}
                                 >{s}</div>
                             ))}
@@ -318,7 +318,7 @@ function LandingPage({ onGetStarted }) {
                             <div style={{ fontSize: '13px', fontWeight: '700', textTransform: 'uppercase', letterSpacing: '0.08em', color: '#fff', marginBottom: '1rem' }}>{col.title}</div>
                             {col.links.map((link, j) => (
                                 <div key={j} style={{ fontSize: '13px', fontFamily: "'Barlow', sans-serif", color: 'rgba(255,255,255,0.4)', marginBottom: '10px', cursor: 'pointer', transition: 'color 0.2s' }}
-                                    onMouseEnter={e => e.currentTarget.style.color = '#00d4a0'}
+                                    onMouseEnter={e => e.currentTarget.style.color = 'var(--accent)'}
                                     onMouseLeave={e => e.currentTarget.style.color = 'rgba(255,255,255,0.4)'}
                                 >{link}</div>
                             ))}

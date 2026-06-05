@@ -1,7 +1,8 @@
-import { Home, Salad, Scale, BookOpen, LogOut, PanelLeft, Settings, HelpCircle, ChevronUp, Globe, ArrowUpCircle, Download, Info, ChevronRight, MessageSquare } from 'lucide-react'
+import { Home, Salad, Scale, BookOpen, LogOut, PanelLeft, Settings, HelpCircle, ChevronUp, Globe, ArrowUpCircle, Download, Info, ChevronRight } from 'lucide-react'
 import { useAuth } from '../context/AuthContext'
 import { useNavigate, useLocation } from 'react-router-dom'
 import { useState, useRef, useEffect } from 'react'
+import { createPortal } from 'react-dom'
 
 function Sidebar({ isOpen, isCollapsed, isDesktop, onToggleCollapse, onClose }) {
     const { user, dangXuat } = useAuth()
@@ -13,7 +14,6 @@ function Sidebar({ isOpen, isCollapsed, isDesktop, onToggleCollapse, onClose }) 
         { path: '/dinh-duong', icon: <Salad size={20} strokeWidth={2} />, label: 'Dinh dưỡng' },
         { path: '/bmi', icon: <Scale size={20} strokeWidth={2} />, label: 'BMI' },
         { path: '/nhat-ky', icon: <BookOpen size={20} strokeWidth={2} />, label: 'Nhật ký' },
-        { path: '/feedback', icon: <MessageSquare size={20} strokeWidth={2} />, label: 'Feedback' },
     ]
 
     const [showUserMenu, setShowUserMenu] = useState(false)
@@ -156,42 +156,58 @@ function Sidebar({ isOpen, isCollapsed, isDesktop, onToggleCollapse, onClose }) 
 
                 {/* User button + popup */}
                 <div ref={userMenuRef} style={{ position: 'relative', borderTop: '1px solid var(--border)' }}>
-                    {showUserMenu && (
+                    {showUserMenu && createPortal(
                         <div style={{
-                            position: 'absolute',
-                            bottom: 'calc(100% + 6px)',
+                            position: 'fixed',
+                            bottom: '70px',
                             left: isCollapsed ? '8px' : '8px',
-                            width: '280px',
-                            background: 'var(--card2)',
-                            border: '1px solid var(--border)',
-                            borderRadius: '14px',
-                            padding: '6px',
-                            boxShadow: '0 12px 32px rgba(0,0,0,0.5)',
-                            zIndex: 1000,
+                            width: isCollapsed ? '220px' : '240px',
+                            background: '#2a2a2a',
+                            border: '1px solid rgba(255,255,255,0.08)',
+                            borderRadius: '20px',
+                            padding: '8px',
+                            boxShadow: '0 8px 32px rgba(0,0,0,0.6)',
+                            zIndex: 9999,
                         }}>
-                            {/* Email */}
-                            <div style={{
-                                padding: '12px 12px 8px',
-                                fontSize: '13px',
-                                color: 'var(--text-secondary)',
-                                whiteSpace: 'nowrap',
-                                overflow: 'hidden',
-                                textOverflow: 'ellipsis',
-                            }}>
-                                {user?.email}
+                            {/* Header: avatar + tên */}
+                            <div
+                                onClick={() => { setShowUserMenu(false); window.location.href = '/profile' }}
+                                style={{
+                                    display: 'flex', alignItems: 'center',
+                                    justifyContent: 'space-between',
+                                    padding: '10px 14px 14px',
+                                    borderRadius: '12px',
+                                    cursor: 'pointer',
+                                    transition: 'background 0.15s',
+                                    marginBottom: '2px',
+                                    borderBottom: '1px solid rgba(255,255,255,0.07)',
+                                    paddingBottom: '14px',
+                                    marginBottom: '6px',
+                                }}
+                                onMouseEnter={e => e.currentTarget.style.background = 'rgba(255,255,255,0.06)'}
+                                onMouseLeave={e => e.currentTarget.style.background = 'transparent'}
+                            >
+                                <div style={{ display: 'flex', alignItems: 'center', gap: '12px', overflow: 'hidden' }}>
+                                    {user?.photoURL
+                                        ? <img src={user.photoURL} alt="avatar" style={{ width: '44px', height: '44px', borderRadius: '50%', objectFit: 'cover', flexShrink: 0 }} />
+                                        : <div style={{ width: '44px', height: '44px', borderRadius: '50%', background: 'var(--accent)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '18px', fontWeight: 700, color: '#000', flexShrink: 0 }}>
+                                            {(user?.displayName || user?.email || 'U')[0].toUpperCase()}
+                                          </div>
+                                    }
+                                    <div style={{ overflow: 'hidden' }}>
+                                        <div style={{ fontWeight: 600, fontSize: '15px', color: '#fff', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                                            {user?.displayName || user?.email?.split('@')[0] || 'User'}
+                                        </div>
+                                        <div style={{ fontSize: '12px', color: 'rgba(255,255,255,0.45)', marginTop: '2px' }}>Free</div>
+                                    </div>
+                                </div>
+                                <ChevronRight size={16} strokeWidth={2} style={{ color: 'rgba(255,255,255,0.4)', flexShrink: 0 }} />
                             </div>
 
-                            {renderRow({ icon: <Settings size={16} strokeWidth={2} />, label: 'Cài đặt', shortcut: '⇧Ctrl,' })}
-                            {renderRow({ icon: <Globe size={16} strokeWidth={2} />, label: 'Ngôn ngữ', trailing: <ChevronRight size={14} strokeWidth={2} /> })}
-                            {renderRow({ icon: <HelpCircle size={16} strokeWidth={2} />, label: 'Trợ giúp' })}
+                            {renderRow({ icon: <Settings size={16} strokeWidth={2} />, label: 'Cài đặt' })}
+                            {renderRow({ icon: <HelpCircle size={16} strokeWidth={2} />, label: 'Trợ giúp', trailing: <ChevronRight size={14} strokeWidth={2} /> })}
 
-                            <div style={{ height: '1px', background: 'var(--border)', margin: '6px 8px' }} />
-
-                            {renderRow({ icon: <ArrowUpCircle size={16} strokeWidth={2} />, label: 'Nâng cấp gói' })}
-                            {renderRow({ icon: <Download size={16} strokeWidth={2} />, label: 'Ứng dụng & tiện ích' })}
-                            {renderRow({ icon: <Info size={16} strokeWidth={2} />, label: 'Tìm hiểu thêm', trailing: <ChevronRight size={14} strokeWidth={2} /> })}
-
-                            <div style={{ height: '1px', background: 'var(--border)', margin: '6px 8px' }} />
+                            <div style={{ height: '1px', background: 'var(--border)', margin: '4px 4px' }} />
 
                             {renderRow({
                                 icon: <LogOut size={16} strokeWidth={2} />,
@@ -200,7 +216,7 @@ function Sidebar({ isOpen, isCollapsed, isDesktop, onToggleCollapse, onClose }) 
                                 onClick: () => { setShowUserMenu(false); dangXuat() },
                             })}
                         </div>
-                    )}
+                    , document.body)}
 
                     {/* User button */}
                     <div onClick={() => setShowUserMenu(prev => !prev)}
@@ -217,9 +233,9 @@ function Sidebar({ isOpen, isCollapsed, isDesktop, onToggleCollapse, onClose }) 
                     >
                         <div style={{ display: 'flex', alignItems: 'center', gap: '10px', overflow: 'hidden' }}>
                             <img
-                                src={user?.photoURL || `https://ui-avatars.com/api/?name=${user?.email || 'User'}&background=00d4a0&color=000`}
+                                src={user?.photoURL || `https://ui-avatars.com/api/?name=${user?.email || 'User'}&background=3b82f6&color=000`}
                                 alt="avatar"
-                                style={{ width: '32px', height: '32px', borderRadius: '50%', objectFit: 'cover', border: '2px solid #00d4a0', flexShrink: 0 }}
+                                style={{ width: '32px', height: '32px', borderRadius: '50%', objectFit: 'cover', border: '2px solid var(--accent)', flexShrink: 0 }}
                             />
                             {!isCollapsed && (
                                 <div style={{ overflow: 'hidden' }}>
