@@ -1,4 +1,4 @@
-import { Home, Salad, Scale, BookOpen, LogOut, PanelLeft, Settings, HelpCircle, ChevronUp, Globe, ArrowUpCircle, Download, Info, ChevronRight } from 'lucide-react'
+import { Home, Salad, Scale, BookOpen, LogOut, PanelLeft, Settings, HelpCircle, ChevronUp, Globe, ArrowUpCircle, Download, Info, ChevronRight, LayoutDashboard, UserCircle, MessageSquare, Bot } from 'lucide-react'
 import { useAuth } from '../context/AuthContext'
 import { useNavigate, useLocation } from 'react-router-dom'
 import { useState, useRef, useEffect } from 'react'
@@ -9,12 +9,33 @@ function Sidebar({ isOpen, isCollapsed, isDesktop, onToggleCollapse, onClose }) 
     const navigate = useNavigate()
     const location = useLocation()
 
-    const menuItems = [
-        { path: '/', icon: <Home size={20} strokeWidth={2} />, label: 'Lịch tập' },
-        { path: '/dinh-duong', icon: <Salad size={20} strokeWidth={2} />, label: 'Dinh dưỡng' },
-        { path: '/bmi', icon: <Scale size={20} strokeWidth={2} />, label: 'BMI' },
-        { path: '/nhat-ky', icon: <BookOpen size={20} strokeWidth={2} />, label: 'Nhật ký' },
+    const menuGroups = [
+        {
+            items: [
+                { path: '/', icon: <Home size={20} strokeWidth={2} />, label: 'Lịch tập' },
+                { path: '/dinh-duong', icon: <Salad size={20} strokeWidth={2} />, label: 'Dinh dưỡng' },
+                { path: '/ai-coach', icon: <Bot size={20} strokeWidth={2} />, label: 'AI Coach' },
+            ]
+        },
+        {
+            items: [
+                { path: '/nhat-ky', icon: <BookOpen size={20} strokeWidth={2} />, label: 'Nhật ký' },
+                { path: '/bmi', icon: <Scale size={20} strokeWidth={2} />, label: 'BMI' },
+            ]
+        },
+        {
+            items: [
+                { path: '/dashboard', icon: <LayoutDashboard size={20} strokeWidth={2} />, label: 'Dashboard' },
+            ]
+        },
+        {
+            items: [
+                { path: '/profile', icon: <UserCircle size={20} strokeWidth={2} />, label: 'Hồ sơ' },
+                { path: '/feedback', icon: <MessageSquare size={20} strokeWidth={2} />, label: 'Feedback' },
+            ]
+        },
     ]
+    const menuItems = menuGroups.flatMap(g => g.items)
 
     const [showUserMenu, setShowUserMenu] = useState(false)
     const userMenuRef = useRef(null)
@@ -123,35 +144,40 @@ function Sidebar({ isOpen, isCollapsed, isDesktop, onToggleCollapse, onClose }) 
 
                 {/* Menu Items */}
                 <div style={{ flex: 1, padding: isCollapsed ? '0.5rem 0' : '0.5rem 0.75rem', overflow: 'hidden' }}>
-                    {menuItems.map((item) => {
-                        const active = location.pathname === item.path
-                        return (
-                            <div
-                                key={item.path}
-                                onClick={() => handleNavigation(item.path)}
-                                title={isCollapsed ? item.label : ''}
-                                style={{
-                                    display: 'flex',
-                                    alignItems: 'center',
-                                    justifyContent: isCollapsed ? 'center' : 'flex-start',
-                                    gap: '12px',
-                                    padding: isCollapsed ? '12px 0' : '11px 16px',
-                                    borderRadius: isCollapsed ? '0' : '12px',
-                                    marginBottom: '2px',
-                                    cursor: 'pointer',
-                                    background: active ? 'var(--accent-dim)' : 'transparent',
-                                    color: active ? 'var(--accent)' : 'var(--text-secondary)',
-                                    transition: 'all 0.15s',
-                                    borderLeft: isCollapsed && active ? '2px solid var(--accent)' : isCollapsed ? '2px solid transparent' : 'none',
-                                }}
-                                onMouseEnter={(e) => { if (!active) { e.currentTarget.style.background = 'rgba(255,255,255,0.05)'; e.currentTarget.style.color = 'var(--text)' } }}
-                                onMouseLeave={(e) => { if (!active) { e.currentTarget.style.background = 'transparent'; e.currentTarget.style.color = 'var(--text-secondary)' } }}
-                            >
-                                {item.icon}
-                                {!isCollapsed && <span style={{ fontSize: '14px', fontWeight: '500', whiteSpace: 'nowrap' }}>{item.label}</span>}
-                            </div>
-                        )
-                    })}
+                    {menuGroups.map((group, gi) => (
+                        <div key={gi}>
+                            {gi > 0 && <div style={{ height: '1px', background: 'var(--border)', margin: isCollapsed ? '6px 0' : '6px 8px' }} />}
+                            {group.items.map((item) => {
+                                const active = location.pathname === item.path
+                                return (
+                                    <div
+                                        key={item.path}
+                                        onClick={() => handleNavigation(item.path)}
+                                        title={isCollapsed ? item.label : ''}
+                                        style={{
+                                            display: 'flex',
+                                            alignItems: 'center',
+                                            justifyContent: isCollapsed ? 'center' : 'flex-start',
+                                            gap: '12px',
+                                            padding: isCollapsed ? '12px 0' : '11px 16px',
+                                            borderRadius: isCollapsed ? '0' : '12px',
+                                            marginBottom: '2px',
+                                            cursor: 'pointer',
+                                            background: active ? 'var(--accent-dim)' : 'transparent',
+                                            color: active ? 'var(--accent)' : 'var(--text-secondary)',
+                                            transition: 'all 0.15s',
+                                            borderLeft: isCollapsed && active ? '2px solid var(--accent)' : isCollapsed ? '2px solid transparent' : 'none',
+                                        }}
+                                        onMouseEnter={(e) => { if (!active) { e.currentTarget.style.background = 'rgba(255,255,255,0.05)'; e.currentTarget.style.color = 'var(--text)' } }}
+                                        onMouseLeave={(e) => { if (!active) { e.currentTarget.style.background = 'transparent'; e.currentTarget.style.color = 'var(--text-secondary)' } }}
+                                    >
+                                        {item.icon}
+                                        {!isCollapsed && <span style={{ fontSize: '14px', fontWeight: '500', whiteSpace: 'nowrap' }}>{item.label}</span>}
+                                    </div>
+                                )
+                            })}
+                        </div>
+                    ))}
                 </div>
 
                 {/* User button + popup */}
