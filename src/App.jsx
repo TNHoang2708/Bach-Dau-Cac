@@ -1,5 +1,7 @@
 import { Routes, Route, Navigate } from 'react-router-dom'
 import TrangChu from './pages/TrangChu'
+import Dashboard from './pages/Dashboard'
+import Profile from './pages/Profile'
 import DinhDuong from './pages/DinhDuong'
 import BMI from './pages/BMI'
 import DangNhap from './pages/DangNhap'
@@ -53,14 +55,22 @@ function App() {
         className="main-content"
         style={{
           flex: 1,
-          padding: '2rem',
           marginLeft: `${sidebarWidth}px`,
           transition: 'margin-left 0.25s cubic-bezier(0.4,0,0.2,1)',
         }}
       >
-        <div style={{ width: '100%' }}>
+        <div
+          style={{
+            width: '100%',
+            maxWidth: '1200px',
+            margin: '0 auto',
+            padding: '2rem',
+          }}
+        >
           <Routes>
             <Route path="/" element={<TrangChu />} />
+            <Route path="/dashboard" element={<Dashboard />} />
+            <Route path="/profile" element={<Profile />} />
             <Route path="/dinh-duong" element={<DinhDuong />} />
             <Route path="/bmi" element={<BMI />} />
             <Route path="/nhat-ky" element={<NhatKy />} />

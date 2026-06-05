@@ -86,8 +86,8 @@ function Sidebar({ isOpen, isCollapsed, isDesktop, onToggleCollapse, onClose }) 
                     flexDirection: 'column',
                     zIndex: 999,
                     transition: 'transform 0.25s cubic-bezier(0.4,0,0.2,1), width 0.25s cubic-bezier(0.4,0,0.2,1)',
-                    transform: isOpen ? 'translateX(0)' : 'translateX(-100%)',
-                    overflow: 'visible',
+                    transform: isOpen ? 'translateX(0)' : 'translateX(-110%)',
+                    overflow: 'hidden',
                 }}
             >
                 {/* Header */}

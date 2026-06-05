@@ -1,34 +1,36 @@
 import { createContext, useContext, useState, useEffect } from 'react'
 import { useApp } from './AppContext'
+import { useAuth } from './AuthContext'
+import { db } from '../firebase'
+import {
+    collection, addDoc, getDocs, deleteDoc,
+    doc, query, orderBy, serverTimestamp, onSnapshot
+} from 'firebase/firestore'
 
 const FoodContext = createContext()
 
-// Tính dailyGoal động từ thông tin user
 function tinhGoal(canNang, chieuCao, tuoi, mucTieu) {
     const kg = parseFloat(canNang)
     const cm = parseFloat(chieuCao)
     const age = parseInt(tuoi)
 
-    // Nếu chưa nhập đủ thì trả về default
     if (!kg || !cm || !age) {
         return { calories: 2500, protein: 150, carbs: 300, fat: 80 }
     }
 
-    // BMR công thức Mifflin-St Jeor (dùng nam, vì app gym)
     const bmr = 10 * kg + 6.25 * cm - 5 * age + 5
-    // TDEE x1.55 (tập vừa phải)
     const tdee = Math.round(bmr * 1.55)
 
     let calories, protein, carbs, fat
 
     if (mucTieu === 'Tăng cơ') {
         calories = tdee + 300
-        protein = Math.round(kg * 2.2)         // 2.2g/kg
-        fat = Math.round((calories * 0.25) / 9) // 25% calo từ fat
+        protein = Math.round(kg * 2.2)
+        fat = Math.round((calories * 0.25) / 9)
         carbs = Math.round((calories - protein * 4 - fat * 9) / 4)
     } else if (mucTieu === 'Giảm mỡ') {
         calories = tdee - 400
-        protein = Math.round(kg * 2.4)         // giữ cơ khi cut
+        protein = Math.round(kg * 2.4)
         fat = Math.round((calories * 0.25) / 9)
         carbs = Math.round((calories - protein * 4 - fat * 9) / 4)
     } else if (mucTieu === 'Tăng cơ/Giảm mỡ') {
@@ -37,7 +39,6 @@ function tinhGoal(canNang, chieuCao, tuoi, mucTieu) {
         fat = Math.round((calories * 0.28) / 9)
         carbs = Math.round((calories - protein * 4 - fat * 9) / 4)
     } else {
-        // Tăng sức bền
         calories = tdee + 100
         protein = Math.round(kg * 1.6)
         fat = Math.round((calories * 0.25) / 9)
@@ -54,36 +55,64 @@ function tinhGoal(canNang, chieuCao, tuoi, mucTieu) {
 
 export function FoodProvider({ children }) {
     const { canNang, chieuCao, tuoi, mucTieu } = useApp()
+    const { user } = useAuth()
     const [foodLog, setFoodLog] = useState([])
+    const [loadingFood, setLoadingFood] = useState(true)
 
     const dailyGoal = tinhGoal(canNang, chieuCao, tuoi, mucTieu)
 
-    // Load từ localStorage
+    // Listen realtime từ Firestore theo user
     useEffect(() => {
-        const saved = localStorage.getItem("foodLog")
-        if (saved) setFoodLog(JSON.parse(saved))
-    }, [])
+        if (!user) {
+            setFoodLog([])
+            setLoadingFood(false)
+            return
+        }
 
-    // Lưu khi thay đổi
-    useEffect(() => {
-        localStorage.setItem("foodLog", JSON.stringify(foodLog))
-    }, [foodLog])
+        const colRef = collection(db, 'users', user.uid, 'foodLog')
+        const q = query(colRef, orderBy('thoiGian', 'desc'))
+
+        const unsub = onSnapshot(q, (snap) => {
+            const data = snap.docs.map(d => ({
+                id: d.id,
+                ...d.data(),
+                // Convert Firestore Timestamp → JS Date string để dùng như cũ
+                time: d.data().thoiGian?.toDate?.()?.toLocaleString('vi-VN') ?? d.data().time ?? ''
+            }))
+            setFoodLog(data)
+            setLoadingFood(false)
+        }, (err) => {
+            console.error('FoodContext snapshot error:', err)
+            setLoadingFood(false)
+        })
+
+        return () => unsub()
+    }, [user])
 
     // Thêm bữa ăn
-    const addMeal = (meal) => {
-        setFoodLog(prev => [...prev, {
+    const addMeal = async (meal) => {
+        if (!user) return
+        const colRef = collection(db, 'users', user.uid, 'foodLog')
+        await addDoc(colRef, {
             ...meal,
-            id: Date.now(),
-            time: new Date().toLocaleString()
-        }])
+            thoiGian: serverTimestamp(),
+        })
+    }
+
+    // Xóa bữa ăn
+    const deleteMeal = async (id) => {
+        if (!user) return
+        await deleteDoc(doc(db, 'users', user.uid, 'foodLog', id))
     }
 
     // Tính tổng hôm nay
     const getTodayTotal = () => {
         const today = new Date().toDateString()
-        const todayMeals = foodLog.filter(m =>
-            new Date(m.time).toDateString() === today
-        )
+        const todayMeals = foodLog.filter(m => {
+            // time là string vi-VN locale, cần parse lại
+            const d = new Date(m.thoiGian?.toDate?.() ?? m.time ?? 0)
+            return d.toDateString() === today
+        })
         const total = { calories: 0, protein: 0, carbs: 0, fat: 0 }
         todayMeals.forEach(meal => {
             total.calories += meal.calories || 0
@@ -94,7 +123,6 @@ export function FoodProvider({ children }) {
         return total
     }
 
-    // Tính còn thiếu
     const getRemaining = () => {
         const total = getTodayTotal()
         return {
@@ -105,11 +133,23 @@ export function FoodProvider({ children }) {
         }
     }
 
+    // Lấy meals hôm nay (dùng cho AICoach)
+    const getTodayMeals = () => {
+        const today = new Date().toDateString()
+        return foodLog.filter(m => {
+            const d = new Date(m.thoiGian?.toDate?.() ?? m.time ?? 0)
+            return d.toDateString() === today
+        })
+    }
+
     return (
         <FoodContext.Provider value={{
             foodLog,
+            loadingFood,
             addMeal,
+            deleteMeal,
             getTodayTotal,
+            getTodayMeals,
             getRemaining,
             dailyGoal
         }}>

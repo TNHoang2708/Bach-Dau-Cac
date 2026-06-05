@@ -2,83 +2,91 @@ import { useState, useRef, useEffect } from 'react'
 import { Bot, Send } from 'lucide-react'
 import { useFood } from '../context/FoodContext'
 import { useApp } from '../context/AppContext'
+import { callGemini } from '../utils/gemini'
 
 const GEMINI_KEY = import.meta.env.VITE_GEMINI_KEY
 
+// System prompt cố định — không đổi giữa các turn
+const buildSystemPrompt = ({ tuoi, canNang, chieuCao, mucTieu, dailyGoal }) => `
+Bạn là AI Coach dinh dưỡng và thể hình. Trả lời ngắn gọn, thân thiện, bằng tiếng Việt.
+
+Thông tin người dùng:
+- Tuổi: ${tuoi || 'chưa nhập'}, Cân nặng: ${canNang || 'chưa nhập'}kg, Chiều cao: ${chieuCao || 'chưa nhập'}cm
+- Mục tiêu: ${mucTieu}
+- Mục tiêu calo/ngày: ${dailyGoal.calories} kcal | Protein: ${dailyGoal.protein}g | Carb: ${dailyGoal.carbs}g | Fat: ${dailyGoal.fat}g
+`.trim()
+
 function AICoach() {
-    const { getTodayTotal, getRemaining, dailyGoal, foodLog } = useFood()
+    const { getTodayTotal, getTodayMeals, getRemaining, dailyGoal } = useFood()
     const { tuoi, canNang, chieuCao, mucTieu } = useApp()
+
     const [chatInput, setChatInput] = useState('')
     const [chatHistory, setChatHistory] = useState([
         { role: 'ai', content: '👋 Chào bạn! Mình là AI Coach. Hỏi mình bất cứ điều gì về dinh dưỡng hoặc tập luyện nhé!' }
     ])
+    // Lưu riêng conversation dạng Gemini API format
+    const [apiMessages, setApiMessages] = useState([])
     const [loading, setLoading] = useState(false)
     const chatEndRef = useRef(null)
 
     const total = getTodayTotal()
     const remaining = getRemaining()
 
-    // Auto scroll xuống tin nhắn mới
     useEffect(() => {
         chatEndRef.current?.scrollIntoView({ behavior: 'smooth' })
     }, [chatHistory])
 
     const handleSend = async (overrideInput) => {
-        const message = overrideInput || chatInput
-        if (!message.trim()) return
+        const message = (overrideInput || chatInput).trim()
+        if (!message) return
 
+        // Hiển thị message user
         setChatHistory(prev => [...prev, { role: 'user', content: message }])
         setChatInput('')
         setLoading(true)
 
-        // Tạo context cho Gemini
-        const today = new Date().toDateString()
-        const todayMeals = foodLog.filter(m => new Date(m.time).toDateString() === today)
+        // Build context realtime (nutrition hôm nay) — gắn vào message đầu tiên mỗi lần gửi
+        const todayMeals = getTodayMeals()
         const mealList = todayMeals.length > 0
             ? todayMeals.map(m => `- ${m.name || 'Không rõ'}: ${m.calories || 0} kcal, ${m.protein || 0}g protein`).join('\n')
             : '- Chưa ghi nhận bữa nào hôm nay'
 
-        const systemContext = `Bạn là AI Coach dinh dưỡng và thể hình. Trả lời ngắn gọn, thân thiện, bằng tiếng Việt.
-
-Thông tin người dùng:
-- Tuổi: ${tuoi || 'chưa nhập'}, Cân nặng: ${canNang || 'chưa nhập'}kg, Chiều cao: ${chieuCao || 'chưa nhập'}cm
-- Mục tiêu: ${mucTieu}
-- Mục tiêu calo/ngày: ${dailyGoal.calories} kcal | Protein: ${dailyGoal.protein}g | Carb: ${dailyGoal.carbs}g | Fat: ${dailyGoal.fat}g
-
-Hôm nay đã nạp:
-- Calo: ${total.calories}/${dailyGoal.calories} kcal
-- Protein: ${total.protein}/${dailyGoal.protein}g
-- Carb: ${total.carbs}/${dailyGoal.carbs}g
-- Fat: ${total.fat}/${dailyGoal.fat}g
-
-Bữa ăn hôm nay:
+        const contextNote = `[Dữ liệu hôm nay của user]
+Đã nạp: ${total.calories}/${dailyGoal.calories} kcal | Protein: ${total.protein}/${dailyGoal.protein}g | Carb: ${total.carbs}/${dailyGoal.carbs}g | Fat: ${total.fat}/${dailyGoal.fat}g
+Còn thiếu: ${remaining.calories} kcal, ${remaining.protein}g protein
+Bữa ăn:
 ${mealList}
 
-Còn thiếu: ${remaining.calories} kcal, ${remaining.protein}g protein
+Câu hỏi: ${message}`
 
-Câu hỏi của user: ${message}`
+        // Build toàn bộ conversation history cho API
+        // Turn đầu tiên gắn system + context, các turn sau chỉ gửi message thôi
+        const newUserMsg = { role: 'user', parts: [{ text: apiMessages.length === 0 ? `${buildSystemPrompt({ tuoi, canNang, chieuCao, mucTieu, dailyGoal })}\n\n${contextNote}` : contextNote }] }
+        const updatedMessages = [...apiMessages, newUserMsg]
 
         try {
-            const response = await fetch(
-                `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${GEMINI_KEY}`,
-                {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({
-                        contents: [{ parts: [{ text: systemContext }] }],
-                        generationConfig: { maxOutputTokens: 300 }
-                    })
-                }
-            )
-            const data = await response.json()
+            const data = await callGemini(GEMINI_KEY, {
+                contents: updatedMessages,
+                generationConfig: { maxOutputTokens: 400 }
+            })
             const reply = data.candidates?.[0]?.content?.parts?.[0]?.text || 'Xin lỗi, mình không trả lời được lúc này!'
+
+            // Cập nhật history UI
             setChatHistory(prev => [...prev, { role: 'ai', content: reply }])
+
+            // Cập nhật API conversation history (giữ tối đa 20 turns để tránh token overflow)
+            const assistantMsg = { role: 'model', parts: [{ text: reply }] }
+            const newHistory = [...updatedMessages, assistantMsg]
+            setApiMessages(newHistory.slice(-20))
+
         } catch {
             setChatHistory(prev => [...prev, { role: 'ai', content: '❌ Lỗi kết nối, thử lại nhé!' }])
         }
 
         setLoading(false)
     }
+
+    const quickQuestions = ['Tối nay ăn gì?', 'Tổng hôm nay', 'Còn thiếu bao nhiêu?', 'Gợi ý bài tập']
 
     return (
         <div className="card" style={{ marginTop: '1.5rem' }}>
@@ -186,7 +194,7 @@ Câu hỏi của user: ${message}`
 
             {/* Gợi ý nhanh */}
             <div style={{ display: 'flex', gap: '8px', marginTop: '12px', flexWrap: 'wrap' }}>
-                {['Tối nay ăn gì?', 'Tổng hôm nay', 'Còn thiếu bao nhiêu?', 'Gợi ý bài tập'].map(q => (
+                {quickQuestions.map(q => (
                     <button
                         key={q}
                         onClick={() => handleSend(q)}

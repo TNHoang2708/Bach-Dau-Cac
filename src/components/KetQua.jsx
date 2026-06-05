@@ -3,24 +3,68 @@ import { useApp } from '../context/AppContext'
 function KetQua() {
     const { ketQua, loading } = useApp()
 
+    if (loading) {
+        return (
+            <div className="loading-box">
+                <div className="spinner"></div>
+                <p>Đang tạo lịch tập cho bạn...</p>
+            </div>
+        )
+    }
+
+    if (!ketQua?.schedule) return null
+
     return (
-        <>
-            {loading && (
-                <div className="loading-box">
-                    <div className="spinner"></div>
-                    <p>Đang tạo lịch tập cho bạn...</p>
+        <div className="ketqua">
+
+            {ketQua.schedule.map((day, index) => (
+                <div
+                    key={index}
+                    style={{
+                        marginBottom: '24px',
+                        padding: '20px',
+                        background: 'var(--card2)',
+                        borderRadius: '12px',
+                        border: '1px solid var(--border)'
+                    }}
+                >
+                    <h3>
+                        {day.day} - {day.group}
+                    </h3>
+
+                    <div
+                        style={{
+                            display: 'grid',
+                            gap: '10px',
+                            marginTop: '16px'
+                        }}
+                    >
+                        {day.exercises.map((exercise, i) => (
+                            <div
+                                key={i}
+                                style={{
+                                    display: 'flex',
+                                    justifyContent: 'space-between',
+                                    padding: '10px',
+                                    background: '#151515',
+                                    borderRadius: '8px'
+                                }}
+                            >
+                                <span>
+                                    {exercise.name}
+                                </span>
+
+                                <strong>
+                                    {exercise.sets} x {exercise.reps}
+                                </strong>
+                            </div>
+                        ))}
+                    </div>
+
                 </div>
-            )}
-            {ketQua && (
-                <div className="ketqua" dangerouslySetInnerHTML={{
-                    __html: ketQua
-                        .replace(/## (.*?)(\n|$)/g, "<h2 style='text-align:center;font-size:20px;color:#00d4a0;margin:24px 0 12px'>$1</h2>")
-                        .replace(/\*\*(.*?)\*\*/g, "<strong>$1</strong>")
-                        .replace(/### (.*?)(\n|$)/g, "<h3>$1</h3>")
-                        .replace(/\n/g, "<br>")
-                }} />
-            )}
-        </>
+            ))}
+
+        </div>
     )
 }
 
