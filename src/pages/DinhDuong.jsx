@@ -1,22 +1,17 @@
 import { useState, useEffect } from 'react'
-import { Camera, ClipboardList, UtensilsCrossed, Zap, Plus } from 'lucide-react'
+import { Camera, ClipboardList, UtensilsCrossed, Zap, Plus, Trash2 } from 'lucide-react'
 import { useFood } from '../context/FoodContext'
+import { callGemini } from '../utils/gemini'
 
 const GEMINI_KEY = import.meta.env.VITE_GEMINI_KEY
 
 function DinhDuong() {
-    const { addMeal } = useFood()
+    const { addMeal, deleteMeal, foodLog, loadingFood } = useFood()
     const [anh, setAnh] = useState(null)
     const [preview, setPreview] = useState(null)
-    const [ketQua, setKetQua] = useState(null)   // object JSON thay vì text thô
+    const [ketQua, setKetQua] = useState(null)
     const [loading, setLoading] = useState(false)
-    const [lichSu, setLichSu] = useState([])
     const [addedToLog, setAddedToLog] = useState(false)
-
-    useEffect(() => {
-        const data = JSON.parse(localStorage.getItem("lichSuBuaAn")) || []
-        setLichSu(data)
-    }, [])
 
     const chonAnh = (e) => {
         const file = e.target.files[0]
@@ -45,7 +40,7 @@ function DinhDuong() {
     }
 
     const phanTich = async () => {
-        if (!anh) { alert("Vui lòng chọn ảnh trước!"); return }
+        if (!anh) { alert('Vui lòng chọn ảnh trước!'); return }
         setLoading(true)
         setKetQua(null)
         setAddedToLog(false)
@@ -54,7 +49,6 @@ function DinhDuong() {
         reader.readAsDataURL(anh)
         reader.onload = async () => {
             const base64 = reader.result.split(',')[1]
-            const thumbnail = await compressAnh(anh)
 
             const prompt = `Bạn là chuyên gia dinh dưỡng. Phân tích bữa ăn trong ảnh và trả về JSON theo đúng format sau, KHÔNG kèm markdown hay text thừa:
 {
@@ -70,41 +64,22 @@ function DinhDuong() {
 }`
 
             try {
-                const response = await fetch(
-                    `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${GEMINI_KEY}`,
-                    {
-                        method: "POST",
-                        headers: { "Content-Type": "application/json" },
-                        body: JSON.stringify({
-                            contents: [{
-                                parts: [
-                                    { text: prompt },
-                                    { inline_data: { mime_type: anh.type, data: base64 } }
-                                ]
-                            }],
-                            generationConfig: { responseMimeType: "application/json" }
-                        })
-                    }
-                )
-                const data = await response.json()
+                const data = await callGemini(GEMINI_KEY, {
+                    contents: [{
+                        parts: [
+                            { text: prompt },
+                            { inline_data: { mime_type: anh.type, data: base64 } }
+                        ]
+                    }],
+                    generationConfig: { responseMimeType: 'application/json' }
+                })
                 const rawText = data.candidates[0].content.parts[0].text
                 const parsed = JSON.parse(rawText.replace(/```json|```/g, '').trim())
                 setKetQua(parsed)
-
-                // Lưu lịch sử
-                const lichSuCu = JSON.parse(localStorage.getItem("lichSuBuaAn")) || []
-                lichSuCu.unshift({
-                    id: Date.now(),
-                    preview: thumbnail,
-                    ketQua: parsed,
-                    thoiGian: new Date().toLocaleString('vi-VN')
-                })
-                if (lichSuCu.length > 10) lichSuCu.pop()
-                localStorage.setItem("lichSuBuaAn", JSON.stringify(lichSuCu))
-                setLichSu(lichSuCu)
-
             } catch (error) {
-                alert("❌ Có lỗi xảy ra: " + error.message)
+                alert('❌ ' + (error.message.includes('503') || error.message.includes('429')
+                    ? 'Gemini đang quá tải, thử lại sau vài giây nhé!'
+                    : 'Có lỗi xảy ra: ' + error.message))
             }
             setLoading(false)
         }
@@ -174,7 +149,7 @@ function DinhDuong() {
                 )}
             </div>
 
-            {/* Kết quả dạng structured */}
+            {/* Kết quả */}
             {ketQua && (
                 <div className="card" style={{ marginTop: '1rem' }}>
                     <div className="card-title" style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
@@ -194,11 +169,7 @@ function DinhDuong() {
                         </button>
                     </div>
 
-                    {/* Tổng macro */}
-                    <div style={{
-                        display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)',
-                        gap: '12px', marginBottom: '1.5rem'
-                    }}>
+                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '12px', marginBottom: '1.5rem' }}>
                         {[
                             { label: 'Calo', val: ketQua.tongCalo, unit: 'kcal', color: '#f59e0b' },
                             { label: 'Protein', val: ketQua.tongProtein, unit: 'g', color: 'var(--accent)' },
@@ -207,8 +178,7 @@ function DinhDuong() {
                         ].map(({ label, val, unit, color }) => (
                             <div key={label} style={{
                                 background: 'var(--card2)', borderRadius: '12px',
-                                padding: '14px', textAlign: 'center',
-                                border: `1px solid var(--border)`
+                                padding: '14px', textAlign: 'center', border: '1px solid var(--border)'
                             }}>
                                 <div style={{ fontSize: '22px', fontWeight: '800', color }}>{val}</div>
                                 <div style={{ fontSize: '11px', color: 'var(--text-secondary)', marginTop: '2px' }}>{label} ({unit})</div>
@@ -216,7 +186,6 @@ function DinhDuong() {
                         ))}
                     </div>
 
-                    {/* Từng món */}
                     <div style={{ marginBottom: '1rem' }}>
                         <div style={{ fontSize: '13px', fontWeight: '600', marginBottom: '8px', color: 'var(--text-secondary)' }}>
                             Từng món ăn
@@ -241,7 +210,6 @@ function DinhDuong() {
                         ))}
                     </div>
 
-                    {/* Đánh giá & gợi ý */}
                     <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
                         <div style={{
                             background: 'rgba(0,212,160,0.05)', border: '1px solid rgba(0,212,160,0.2)',
@@ -261,35 +229,49 @@ function DinhDuong() {
                 </div>
             )}
 
-            {/* Lịch sử */}
-            {lichSu.length > 0 && (
+            {/* Lịch sử từ Firestore */}
+            {!loadingFood && foodLog.length > 0 && (
                 <div className="card" style={{ marginTop: '1.5rem' }}>
                     <div className="card-title" style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                        <ClipboardList size={16} /> Lịch sử bữa ăn
+                        <ClipboardList size={16} /> Lịch sử bữa ăn ({foodLog.length})
                     </div>
-                    {lichSu.map((buoi) => (
-                        <div key={buoi.id} className="lichsu-item" onClick={() => {
-                            setPreview(buoi.preview)
-                            setKetQua(buoi.ketQua)
-                            setAddedToLog(false)
-                            window.scrollTo({ top: 0, behavior: 'smooth' })
-                        }}>
-                            <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-                                {buoi.preview && (
-                                    <img src={buoi.preview} alt="" style={{ width: '48px', height: '48px', borderRadius: '8px', objectFit: 'cover' }} />
-                                )}
+                    {foodLog.map((buoi) => (
+                        <div key={buoi.id} className="lichsu-item">
+                            <div style={{ display: 'flex', alignItems: 'center', gap: '12px', flex: 1 }}>
+                                <div style={{
+                                    width: '40px', height: '40px', borderRadius: '8px',
+                                    background: 'var(--card2)', border: '1px solid var(--border)',
+                                    display: 'flex', alignItems: 'center', justifyContent: 'center'
+                                }}>
+                                    <UtensilsCrossed size={16} color='var(--text-secondary)' />
+                                </div>
                                 <div>
-                                    <span style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '13px' }}>
-                                        <UtensilsCrossed size={14} /> {buoi.thoiGian}
-                                    </span>
-                                    {buoi.ketQua?.tongCalo && (
-                                        <span style={{ fontSize: '12px', color: 'var(--text-secondary)' }}>
-                                            {buoi.ketQua.tongCalo} kcal · {buoi.ketQua.tongProtein}g protein
-                                        </span>
-                                    )}
+                                    <div style={{ fontSize: '13px', fontWeight: 600, color: 'var(--text)', marginBottom: '2px' }}>
+                                        {buoi.name || 'Bữa ăn'}
+                                    </div>
+                                    <div style={{ fontSize: '12px', color: 'var(--text-secondary)' }}>
+                                        {buoi.calories} kcal · P: {buoi.protein}g · C: {buoi.carbs}g · F: {buoi.fat}g
+                                    </div>
+                                    <div style={{ fontSize: '11px', color: 'var(--text-secondary)', marginTop: '2px' }}>
+                                        {buoi.time}
+                                    </div>
                                 </div>
                             </div>
-                            <span className="lichsu-xem">Xem lại →</span>
+                            <button
+                                onClick={() => deleteMeal(buoi.id)}
+                                style={{
+                                    width: 'auto', padding: '6px 10px',
+                                    background: 'transparent',
+                                    border: '1px solid var(--border)',
+                                    color: '#ef4444',
+                                    borderRadius: '8px',
+                                    cursor: 'pointer',
+                                    display: 'flex', alignItems: 'center',
+                                }}
+                                title="Xóa bữa ăn"
+                            >
+                                <Trash2 size={14} />
+                            </button>
                         </div>
                     ))}
                 </div>
