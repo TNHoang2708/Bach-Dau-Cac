@@ -1,5 +1,7 @@
 import { useState, useRef, useEffect } from 'react'
-import { Bot, Send, X, Minimize2, Maximize2, Sparkles, ChevronDown } from 'lucide-react'
+import { Bot, Send, X, Minimize2, Maximize2, Sparkles, ChevronDown, Trash2 } from 'lucide-react'
+import { useApp } from '../context/AppContext'
+import { useFood } from '../context/FoodContext'
 
 const GEMINI_KEY = import.meta.env.VITE_GEMINI_KEY
 
@@ -23,14 +25,99 @@ function TypingDots() {
   )
 }
 
-// Format markdown-like text
+// Simple inline markdown parsing: Bold **, Italic *, Code `
+function parseInline(text) {
+  if (!text) return ''
+  const regex = /(\*\*.*?\*\*|\*.*?\*|`.*?`)/g
+  const splitParts = text.split(regex)
+  
+  return splitParts.map((part, i) => {
+    if (part.startsWith('**') && part.endsWith('**')) {
+      return <strong key={i} style={{ fontWeight: '700', color: '#fff' }}>{part.slice(2, -2)}</strong>
+    }
+    if (part.startsWith('*') && part.endsWith('*')) {
+      return <em key={i} style={{ fontStyle: 'italic' }}>{part.slice(1, -1)}</em>
+    }
+    if (part.startsWith('`') && part.endsWith('`')) {
+      return (
+        <code key={i} style={{
+          background: 'rgba(255,255,255,0.12)',
+          padding: '2px 5px',
+          borderRadius: '4px',
+          fontSize: '12px',
+          fontFamily: 'monospace',
+          color: '#00d4a0'
+        }}>
+          {part.slice(1, -1)}
+        </code>
+      )
+    }
+    return part
+  })
+}
+
+// Format markdown text with lists, headers, paragraphs, etc.
 function MessageContent({ text }) {
-  // Convert **bold** and *italic* and newlines
-  const html = text
-    .replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>')
-    .replace(/\*(.+?)\*/g, '<em>$1</em>')
-    .replace(/\n/g, '<br/>')
-  return <span dangerouslySetInnerHTML={{ __html: html }} />
+  if (!text) return null
+  
+  const lines = text.split('\n')
+  return (
+    <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
+      {lines.map((line, index) => {
+        const trimmed = line.trim()
+        
+        // Headings
+        if (trimmed.startsWith('### ')) {
+          return (
+            <h4 key={index} style={{ margin: '8px 0 4px', fontSize: '13.5px', fontWeight: '700', color: '#00d4a0' }}>
+              {parseInline(trimmed.slice(4))}
+            </h4>
+          )
+        }
+        if (trimmed.startsWith('## ') || trimmed.startsWith('# ')) {
+          const headerText = trimmed.startsWith('## ') ? trimmed.slice(3) : trimmed.slice(2)
+          return (
+            <h3 key={index} style={{ margin: '12px 0 6px', fontSize: '14.5px', fontWeight: '700', color: '#00d4a0' }}>
+              {parseInline(headerText)}
+            </h3>
+          )
+        }
+        
+        // Bullet list
+        if (trimmed.startsWith('* ') || trimmed.startsWith('- ') || trimmed.startsWith('• ')) {
+          return (
+            <div key={index} style={{ display: 'flex', gap: '6px', alignItems: 'flex-start', paddingLeft: '6px' }}>
+              <span style={{ color: '#00d4a0', flexShrink: 0 }}>•</span>
+              <span>{parseInline(trimmed.slice(2))}</span>
+            </div>
+          )
+        }
+        
+        // Numbered list
+        const numMatch = trimmed.match(/^(\d+)\.\s(.*)/)
+        if (numMatch) {
+          return (
+            <div key={index} style={{ display: 'flex', gap: '6px', alignItems: 'flex-start', paddingLeft: '6px' }}>
+              <span style={{ color: '#00d4a0', fontWeight: '700', flexShrink: 0 }}>{numMatch[1]}.</span>
+              <span>{parseInline(numMatch[2])}</span>
+            </div>
+          )
+        }
+        
+        // Empty lines
+        if (trimmed === '') {
+          return <div key={index} style={{ height: '4px' }} />
+        }
+        
+        // Normal paragraph text
+        return (
+          <div key={index} style={{ margin: 0, minHeight: '18px' }}>
+            {parseInline(line)}
+          </div>
+        )
+      })}
+    </div>
+  )
 }
 
 const QUICK_REPLIES = [
@@ -47,7 +134,7 @@ function ChatBox() {
   const [messages, setMessages] = useState([
     {
       role: 'ai',
-      content: '👋 Xin chào! Mình là **AI Coach** thể hình & dinh dưỡng.\n\nBạn muốn hỏi gì hôm nay? 💪',
+      content: '👋 Xin chào! Mình là **AI Coach** thể hình & dinh dưỡng.\\n\\nBạn muốn hỏi gì hôm nay? 💪',
       time: new Date(),
     },
   ])
@@ -59,6 +146,10 @@ function ChatBox() {
   const messagesContainerRef = useRef(null)
   const inputRef = useRef(null)
 
+  // Fetch contexts for personalization
+  const { tuoi, canNang, chieuCao, mucTieu, soNgay, ketQua } = useApp()
+  const { dailyGoal, getTodayTotal } = useFood()
+
   // Scroll to bottom
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' })
@@ -68,8 +159,6 @@ function ChatBox() {
     if (isOpen && !isMinimized) {
       scrollToBottom()
       setUnread(0)
-    } else if (!isOpen) {
-      // Count unread when closed
     }
   }, [messages, isOpen, isMinimized])
 
@@ -85,6 +174,19 @@ function ChatBox() {
     return new Date(date).toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' })
   }
 
+  const handleClearHistory = () => {
+    if (window.confirm('Bạn có chắc chắn muốn xóa lịch sử cuộc trò chuyện này không?')) {
+      setMessages([
+        {
+          role: 'ai',
+          content: '👋 Đã xóa lịch sử trò chuyện. Mình là **AI Coach** thể hình & dinh dưỡng.\\n\\nBạn muốn hỏi gì tiếp theo? 💪',
+          time: new Date(),
+        },
+      ])
+      setInput('')
+    }
+  }
+
   const sendMessage = async (overrideMsg) => {
     const msg = overrideMsg || input.trim()
     if (!msg || loading) return
@@ -94,11 +196,68 @@ function ChatBox() {
     setInput('')
     setLoading(true)
 
-    const systemPrompt = `Bạn là AI Coach chuyên về thể hình, dinh dưỡng và sức khỏe. 
-Trả lời thân thiện, ngắn gọn, có cấu trúc rõ ràng bằng tiếng Việt.
-Dùng emoji phù hợp để làm sinh động câu trả lời.
-Tối đa 200 từ mỗi câu trả lời.
-Câu hỏi: ${msg}`
+    // Calculate user profile details
+    const heightM = chieuCao ? parseFloat(chieuCao) / 100 : null
+    const weightKg = canNang ? parseFloat(canNang) : null
+    const bmi = (weightKg && heightM) ? (weightKg / (heightM * heightM)).toFixed(1) : null
+    
+    let bmiCategory = ''
+    if (bmi) {
+      const b = parseFloat(bmi)
+      if (b < 18.5) bmiCategory = 'Thiếu cân ⚠️'
+      else if (b < 23) bmiCategory = 'Bình thường ✅'
+      else if (b < 25) bmiCategory = 'Tiền béo phì (Thừa cân) ⚠️'
+      else if (b < 30) bmiCategory = 'Béo phì độ 1 🚨'
+      else bmiCategory = 'Béo phì độ 2 🚨'
+    }
+
+    const todayNutri = getTodayTotal ? getTodayTotal() : { calories: 0, protein: 0, carbs: 0, fat: 0 }
+
+    const systemPrompt = `Bạn là AI Coach - Huấn luyện viên thể hình & dinh dưỡng thông minh, thân thiện và tận tâm.
+Hãy trò chuyện và hướng dẫn người dùng dựa trên thông tin sức khỏe cá nhân của họ bên dưới.
+
+THÔNG TIN SỨC KHỎE NGƯỜI DÙNG:
+- Tuổi: ${tuoi || 'Chưa nhập'}
+- Chiều cao: ${chieuCao || 'Chưa nhập'} cm
+- Cân nặng: ${canNang || 'Chưa nhập'} kg
+- Chỉ số BMI: ${bmi ? `${bmi} (${bmiCategory})` : 'Chưa tính (khuyên người dùng nhập chiều cao, cân nặng ở mục BMI)'}
+- Mục tiêu: ${mucTieu || 'Chưa chọn'}
+- Lịch tập mong muốn: ${soNgay || 'Chưa chọn'}
+- Lịch tập hiện tại đã tạo:
+${ketQua ? ketQua.slice(0, 500) : 'Chưa có.'}
+
+DINH DƯỠNG HÔM NAY (Đã nạp / Mục tiêu ngày):
+- Calo: ${todayNutri.calories || 0} kcal / ${dailyGoal?.calories || 2500} kcal
+- Protein: ${todayNutri.protein || 0}g / ${dailyGoal?.protein || 150}g
+- Carbs: ${todayNutri.carbs || 0}g / ${dailyGoal?.carbs || 300}g
+- Fat: ${todayNutri.fat || 0}g / ${dailyGoal?.fat || 80}g
+
+HƯỚNG DẪN TRẢ LỜI:
+1. Trả lời bằng tiếng Việt, thân thiện, ngắn gọn, súc tích và có cấu trúc rõ ràng. Dùng emoji phù hợp.
+2. Tối đa 250 từ mỗi câu trả lời.
+3. Cá nhân hóa câu trả lời dựa trên chỉ số sức khỏe & dinh dưỡng của người dùng ở trên. Hãy đưa ra các giải pháp cụ thể giúp họ đạt được mục tiêu tập luyện "${mucTieu}".
+4. Sử dụng định dạng markdown: Tiêu đề phụ (##, ###), danh sách đầu dòng (-, *), in đậm (**) hoặc in nghiêng (*) để nội dung hiển thị thật rõ ràng, chuyên nghiệp.`
+
+    // Construct conversation history for Gemini API
+    const updatedHistory = [...messages, userMsg]
+    const contents = []
+    let lastRole = null
+
+    updatedHistory.forEach((m, idx) => {
+      // Skip the welcome message to ensure the payload starts with a 'user' message
+      if (idx === 0 && m.role === 'ai') return
+
+      const apiRole = m.role === 'ai' ? 'model' : 'user'
+      if (apiRole === lastRole) {
+        contents[contents.length - 1].parts[0].text += '\n\n' + m.content
+      } else {
+        contents.push({
+          role: apiRole,
+          parts: [{ text: m.content }]
+        })
+        lastRole = apiRole
+      }
+    })
 
     try {
       const res = await fetch(
@@ -107,22 +266,36 @@ Câu hỏi: ${msg}`
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
-            contents: [{ parts: [{ text: systemPrompt }] }],
-            generationConfig: { maxOutputTokens: 400, temperature: 0.8 },
+            contents,
+            systemInstruction: {
+              parts: [{ text: systemPrompt }]
+            },
+            generationConfig: { maxOutputTokens: 600, temperature: 0.7 },
           }),
         }
       )
+      
       const data = await res.json()
+      
+      if (!res.ok) {
+        throw new Error(data.error?.message || `Lỗi HTTP! Trạng thái: ${res.status}`)
+      }
+      
+      if (data.error) {
+        throw new Error(data.error.message || 'Lỗi API không xác định')
+      }
+
       const reply =
         data.candidates?.[0]?.content?.parts?.[0]?.text ||
         'Xin lỗi, mình chưa hiểu câu hỏi này. Bạn có thể hỏi lại không? 🙏'
 
       setMessages(prev => [...prev, { role: 'ai', content: reply, time: new Date() }])
       if (!isOpen) setUnread(prev => prev + 1)
-    } catch {
+    } catch (error) {
+      console.error("Gemini Chat Error:", error)
       setMessages(prev => [
         ...prev,
-        { role: 'ai', content: '❌ Lỗi kết nối. Vui lòng thử lại sau nhé!', time: new Date() },
+        { role: 'ai', content: `❌ Lỗi: ${error.message || 'Lỗi kết nối. Vui lòng thử lại sau nhé!'}`, time: new Date() },
       ])
     }
     setLoading(false)
@@ -314,6 +487,18 @@ Câu hỏi: ${msg}`
 
             {/* Actions */}
             <div style={{ display: 'flex', gap: '4px' }}>
+              <button
+                onClick={handleClearHistory}
+                title="Xóa cuộc trò chuyện"
+                style={{
+                  width: '30px', height: '30px', borderRadius: '8px',
+                  background: 'rgba(0,0,0,0.15)', border: 'none',
+                  cursor: 'pointer', display: 'flex', alignItems: 'center',
+                  justifyContent: 'center', transition: 'background 0.2s', padding: 0, margin: 0,
+                }}
+              >
+                <Trash2 size={14} color="#000" />
+              </button>
               <button
                 onClick={() => setIsMinimized(p => !p)}
                 style={{
