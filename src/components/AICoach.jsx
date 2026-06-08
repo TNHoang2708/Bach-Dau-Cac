@@ -6,27 +6,32 @@ import { callGemini } from '../utils/gemini'
 
 const GEMINI_KEY = import.meta.env.VITE_GEMINI_KEY
 
-// System prompt cố định — không đổi giữa các turn
-const buildSystemPrompt = ({ tuoi, canNang, chieuCao, mucTieu, dailyGoal }) => `
-Bạn là AI Coach dinh dưỡng và thể hình. Trả lời ngắn gọn, thân thiện, bằng tiếng Việt.
+const ONBOARDING = [
+    '👋 Chào! Mình là AI Coach của bạn.\n\nBạn đã tập gym được bao lâu rồi? (Ví dụ: mới bắt đầu, 6 tháng, 2 năm...)',
+    'Bạn có vấn đề sức khỏe nào cần lưu ý không?\n(Đau lưng, đau gối, huyết áp cao... hoặc gõ "không có")',
+    '✅ Tuyệt! Mình đã hiểu về bạn rồi. Hãy bấm **Tạo lịch tập** để mình thiết kế chương trình phù hợp nhé! 💪\n\nHoặc hỏi mình bất cứ điều gì về dinh dưỡng và tập luyện.',
+]
+
+function buildSystemPrompt({ tuoi, canNang, chieuCao, mucTieu, dailyGoal, chatContext }) {
+    return `Bạn là AI Coach thể hình và dinh dưỡng cá nhân. Trả lời ngắn gọn, thân thiện, bằng tiếng Việt.
 
 Thông tin người dùng:
 - Tuổi: ${tuoi || 'chưa nhập'}, Cân nặng: ${canNang || 'chưa nhập'}kg, Chiều cao: ${chieuCao || 'chưa nhập'}cm
 - Mục tiêu: ${mucTieu}
-- Mục tiêu calo/ngày: ${dailyGoal.calories} kcal | Protein: ${dailyGoal.protein}g | Carb: ${dailyGoal.carbs}g | Fat: ${dailyGoal.fat}g
-`.trim()
+- Calo/ngày: ${dailyGoal.calories} kcal | Protein: ${dailyGoal.protein}g | Carb: ${dailyGoal.carbs}g | Fat: ${dailyGoal.fat}g
+${chatContext ? `\nThông tin bổ sung:\n${chatContext}` : ''}`
+}
 
-function AICoach() {
+function AICoach({ onContextUpdate }) {
     const { getTodayTotal, getTodayMeals, getRemaining, dailyGoal } = useFood()
     const { tuoi, canNang, chieuCao, mucTieu } = useApp()
 
     const [chatInput, setChatInput] = useState('')
-    const [chatHistory, setChatHistory] = useState([
-        { role: 'ai', content: '👋 Chào bạn! Mình là AI Coach. Hỏi mình bất cứ điều gì về dinh dưỡng hoặc tập luyện nhé!' }
-    ])
-    // Lưu riêng conversation dạng Gemini API format
+    const [chatHistory, setChatHistory] = useState([{ role: 'ai', content: ONBOARDING[0] }])
     const [apiMessages, setApiMessages] = useState([])
     const [loading, setLoading] = useState(false)
+    const [onboardingStep, setOnboardingStep] = useState(0)
+    const [chatContext, setChatContext] = useState('')
     const chatEndRef = useRef(null)
 
     const total = getTodayTotal()
@@ -36,49 +41,68 @@ function AICoach() {
         chatEndRef.current?.scrollIntoView({ behavior: 'smooth' })
     }, [chatHistory])
 
+    useEffect(() => {
+        if (onContextUpdate) onContextUpdate(chatContext)
+    }, [chatContext])
+
     const handleSend = async (overrideInput) => {
         const message = (overrideInput || chatInput).trim()
-        if (!message) return
+        if (!message || loading) return
 
-        // Hiển thị message user
         setChatHistory(prev => [...prev, { role: 'user', content: message }])
         setChatInput('')
         setLoading(true)
 
-        // Build context realtime (nutrition hôm nay) — gắn vào message đầu tiên mỗi lần gửi
+        // Onboarding step 0: hỏi kinh nghiệm
+        if (onboardingStep === 0) {
+            const ctx = `Kinh nghiệm tập: ${message}`
+            setChatContext(ctx)
+            setOnboardingStep(1)
+            setTimeout(() => {
+                setChatHistory(prev => [...prev, { role: 'ai', content: ONBOARDING[1] }])
+                setLoading(false)
+            }, 500)
+            return
+        }
+
+        // Onboarding step 1: hỏi bệnh lý
+        if (onboardingStep === 1) {
+            const ctx = chatContext + `\nTình trạng sức khỏe: ${message}`
+            setChatContext(ctx)
+            setOnboardingStep(2)
+            setTimeout(() => {
+                setChatHistory(prev => [...prev, { role: 'ai', content: ONBOARDING[2] }])
+                setLoading(false)
+            }, 500)
+            return
+        }
+
+        // Chat tự do với Gemini
         const todayMeals = getTodayMeals()
         const mealList = todayMeals.length > 0
-            ? todayMeals.map(m => `- ${m.name || 'Không rõ'}: ${m.calories || 0} kcal, ${m.protein || 0}g protein`).join('\n')
-            : '- Chưa ghi nhận bữa nào hôm nay'
+            ? todayMeals.map(m => `- ${m.name || 'Bữa ăn'}: ${m.calories || 0} kcal`).join('\n')
+            : '- Chưa có bữa nào'
 
-        const contextNote = `[Dữ liệu hôm nay của user]
-Đã nạp: ${total.calories}/${dailyGoal.calories} kcal | Protein: ${total.protein}/${dailyGoal.protein}g | Carb: ${total.carbs}/${dailyGoal.carbs}g | Fat: ${total.fat}/${dailyGoal.fat}g
-Còn thiếu: ${remaining.calories} kcal, ${remaining.protein}g protein
-Bữa ăn:
+        const contextNote = `[Hôm nay] Calo: ${total.calories}/${dailyGoal.calories} | Protein: ${total.protein}/${dailyGoal.protein}g | Còn thiếu: ${remaining.calories} kcal
 ${mealList}
 
 Câu hỏi: ${message}`
 
-        // Build toàn bộ conversation history cho API
-        // Turn đầu tiên gắn system + context, các turn sau chỉ gửi message thôi
-        const newUserMsg = { role: 'user', parts: [{ text: apiMessages.length === 0 ? `${buildSystemPrompt({ tuoi, canNang, chieuCao, mucTieu, dailyGoal })}\n\n${contextNote}` : contextNote }] }
+        const systemPrompt = buildSystemPrompt({ tuoi, canNang, chieuCao, mucTieu, dailyGoal, chatContext })
+        const newUserMsg = {
+            role: 'user',
+            parts: [{ text: apiMessages.length === 0 ? `${systemPrompt}\n\n${contextNote}` : contextNote }]
+        }
         const updatedMessages = [...apiMessages, newUserMsg]
 
         try {
             const data = await callGemini(GEMINI_KEY, {
                 contents: updatedMessages,
-                generationConfig: { maxOutputTokens: 400 }
+                generationConfig: { maxOutputTokens: 500 }
             })
-            const reply = data.candidates?.[0]?.content?.parts?.[0]?.text || 'Xin lỗi, mình không trả lời được lúc này!'
-
-            // Cập nhật history UI
+            const reply = data.candidates?.[0]?.content?.parts?.[0]?.text || 'Xin lỗi, mình không trả lời được!'
             setChatHistory(prev => [...prev, { role: 'ai', content: reply }])
-
-            // Cập nhật API conversation history (giữ tối đa 20 turns để tránh token overflow)
-            const assistantMsg = { role: 'model', parts: [{ text: reply }] }
-            const newHistory = [...updatedMessages, assistantMsg]
-            setApiMessages(newHistory.slice(-20))
-
+            setApiMessages([...updatedMessages, { role: 'model', parts: [{ text: reply }] }].slice(-20))
         } catch {
             setChatHistory(prev => [...prev, { role: 'ai', content: '❌ Lỗi kết nối, thử lại nhé!' }])
         }
@@ -86,131 +110,96 @@ Câu hỏi: ${message}`
         setLoading(false)
     }
 
-    const quickQuestions = ['Tối nay ăn gì?', 'Tổng hôm nay', 'Còn thiếu bao nhiêu?', 'Gợi ý bài tập']
+    const quickQuestions = onboardingStep >= 2
+        ? ['Tối nay ăn gì?', 'Tổng hôm nay', 'Còn thiếu bao nhiêu?', 'Gợi ý bài tập']
+        : []
 
     return (
         <div className="card" style={{ marginTop: '1.5rem' }}>
             <div className="card-title" style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                <Bot size={16} style={{ color: 'var(--accent)' }} /> AI Coach
+                <Bot size={14} style={{ color: 'var(--accent)' }} /> AI COACH
             </div>
 
-            {/* Tổng quan hôm nay */}
-            <div style={{
-                display: 'grid',
-                gridTemplateColumns: 'repeat(4, 1fr)',
-                gap: '12px',
-                marginBottom: '1rem',
-                padding: '0.5rem 0'
-            }}>
-                {[
-                    { label: 'Calo', val: total.calories, goal: dailyGoal.calories, unit: '' },
-                    { label: 'Protein', val: total.protein, goal: dailyGoal.protein, unit: 'g' },
-                    { label: 'Carb', val: total.carbs, goal: dailyGoal.carbs, unit: 'g' },
-                    { label: 'Fat', val: total.fat, goal: dailyGoal.fat, unit: 'g' },
-                ].map(({ label, val, goal, unit }) => (
-                    <div key={label} style={{ textAlign: 'center' }}>
-                        <div style={{ fontSize: '11px', color: 'var(--text-secondary)' }}>{label}</div>
-                        <div style={{ fontSize: '16px', fontWeight: '700', color: val >= goal ? 'var(--accent)' : 'var(--text)' }}>
-                            {val}<span style={{ fontSize: '11px', color: 'var(--text-secondary)' }}>/{goal}{unit}</span>
-                        </div>
+            {onboardingStep >= 2 && (
+                <>
+                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '12px', marginBottom: '1rem' }}>
+                        {[
+                            { label: 'Calo', val: total.calories, goal: dailyGoal.calories, unit: '' },
+                            { label: 'Protein', val: total.protein, goal: dailyGoal.protein, unit: 'g' },
+                            { label: 'Carb', val: total.carbs, goal: dailyGoal.carbs, unit: 'g' },
+                            { label: 'Fat', val: total.fat, goal: dailyGoal.fat, unit: 'g' },
+                        ].map(({ label, val, goal, unit }) => (
+                            <div key={label} style={{ textAlign: 'center' }}>
+                                <div style={{ fontSize: '11px', color: 'var(--text-secondary)' }}>{label}</div>
+                                <div style={{ fontSize: '16px', fontWeight: 700, color: val >= goal ? 'var(--accent)' : 'var(--text)' }}>
+                                    {val}<span style={{ fontSize: '10px', color: 'var(--text-secondary)' }}>/{goal}{unit}</span>
+                                </div>
+                            </div>
+                        ))}
                     </div>
-                ))}
-            </div>
-
-            {/* Progress bars */}
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '6px', marginBottom: '1rem' }}>
-                {[
-                    { label: 'Calo', val: total.calories, goal: dailyGoal.calories, color: '#f59e0b' },
-                    { label: 'Protein', val: total.protein, goal: dailyGoal.protein, color: 'var(--accent)' },
-                    { label: 'Carb', val: total.carbs, goal: dailyGoal.carbs, color: '#60a5fa' },
-                    { label: 'Fat', val: total.fat, goal: dailyGoal.fat, color: '#f97316' },
-                ].map(({ label, val, goal, color }) => (
-                    <div key={label} style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                        <span style={{ fontSize: '11px', color: 'var(--text-secondary)', width: '40px' }}>{label}</span>
-                        <div style={{ flex: 1, height: '5px', background: 'var(--border)', borderRadius: '3px', overflow: 'hidden' }}>
-                            <div style={{
-                                width: `${Math.min(100, (val / goal) * 100)}%`,
-                                height: '100%',
-                                background: color,
-                                borderRadius: '3px',
-                                transition: 'width 0.4s ease'
-                            }} />
-                        </div>
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '5px', marginBottom: '1rem' }}>
+                        {[
+                            { label: 'Calo', val: total.calories, goal: dailyGoal.calories, color: '#f59e0b' },
+                            { label: 'Protein', val: total.protein, goal: dailyGoal.protein, color: 'var(--accent)' },
+                            { label: 'Carb', val: total.carbs, goal: dailyGoal.carbs, color: '#60a5fa' },
+                            { label: 'Fat', val: total.fat, goal: dailyGoal.fat, color: '#f97316' },
+                        ].map(({ label, val, goal, color }) => (
+                            <div key={label} style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                                <span style={{ fontSize: '11px', color: 'var(--text-secondary)', width: '40px' }}>{label}</span>
+                                <div style={{ flex: 1, height: '4px', background: 'var(--border)', borderRadius: '4px', overflow: 'hidden' }}>
+                                    <div style={{ width: `${Math.min(100, (val / goal) * 100)}%`, height: '100%', background: color, borderRadius: '4px', transition: 'width 0.4s ease' }} />
+                                </div>
+                            </div>
+                        ))}
                     </div>
-                ))}
-            </div>
+                </>
+            )}
 
-            {/* Chat box */}
-            <div style={{
-                background: 'var(--card2)',
-                borderRadius: '12px',
-                padding: '1rem',
-                maxHeight: '280px',
-                overflowY: 'auto',
-                marginBottom: '1rem'
-            }}>
+            <div style={{ background: 'var(--card2)', borderRadius: '12px', padding: '1rem', maxHeight: '300px', overflowY: 'auto', marginBottom: '1rem' }}>
                 {chatHistory.map((msg, idx) => (
-                    <div key={idx} style={{
-                        display: 'flex',
-                        justifyContent: msg.role === 'user' ? 'flex-end' : 'flex-start',
-                        marginBottom: '12px'
-                    }}>
+                    <div key={idx} style={{ display: 'flex', justifyContent: msg.role === 'user' ? 'flex-end' : 'flex-start', marginBottom: '12px' }}>
                         <div style={{
-                            maxWidth: '82%',
-                            padding: '8px 12px',
-                            borderRadius: '12px',
+                            maxWidth: '82%', padding: '10px 14px', borderRadius: '14px',
                             background: msg.role === 'user' ? 'var(--accent)' : 'var(--card)',
-                            color: msg.role === 'user' ? '#000' : 'var(--text)',
-                            fontSize: '13px',
-                            whiteSpace: 'pre-line',
-                            lineHeight: 1.6
+                            color: msg.role === 'user' ? '#fff' : 'var(--text)',
+                            fontSize: '13px', whiteSpace: 'pre-line', lineHeight: 1.6,
+                            border: msg.role === 'user' ? 'none' : '1px solid var(--border)',
                         }}>
                             {msg.content}
                         </div>
                     </div>
                 ))}
-                {loading && (
-                    <div style={{ textAlign: 'left', fontSize: '12px', color: 'var(--text-secondary)', padding: '4px 8px' }}>
-                        AI Coach đang suy nghĩ...
-                    </div>
-                )}
+                {loading && <div style={{ fontSize: '12px', color: 'var(--text-secondary)', padding: '4px 8px' }}>AI Coach đang suy nghĩ...</div>}
                 <div ref={chatEndRef} />
             </div>
 
-            {/* Input */}
             <div style={{ display: 'flex', gap: '8px' }}>
                 <input
                     type="text"
-                    placeholder="Hỏi AI Coach..."
+                    placeholder={onboardingStep < 2 ? 'Trả lời AI Coach...' : 'Hỏi AI Coach...'}
                     value={chatInput}
                     onChange={(e) => setChatInput(e.target.value)}
                     onKeyDown={(e) => e.key === 'Enter' && !loading && handleSend()}
                     style={{ flex: 1 }}
                 />
                 <button onClick={() => handleSend()} disabled={loading} style={{ width: 'auto', padding: '0 16px' }}>
-                    <Send size={16} />
+                    <Send size={15} />
                 </button>
             </div>
 
-            {/* Gợi ý nhanh */}
-            <div style={{ display: 'flex', gap: '8px', marginTop: '12px', flexWrap: 'wrap' }}>
-                {quickQuestions.map(q => (
-                    <button
-                        key={q}
-                        onClick={() => handleSend(q)}
-                        style={{
-                            width: 'auto',
-                            padding: '6px 12px',
-                            fontSize: '12px',
-                            background: 'transparent',
-                            border: '1px solid var(--border)',
-                            color: 'var(--text-secondary)'
-                        }}
-                    >
-                        {q}
-                    </button>
-                ))}
-            </div>
+            {quickQuestions.length > 0 && (
+                <div style={{ display: 'flex', gap: '8px', marginTop: '10px', flexWrap: 'wrap' }}>
+                    {quickQuestions.map(q => (
+                        <button key={q} onClick={() => handleSend(q)} style={{
+                            width: 'auto', padding: '5px 12px', fontSize: '12px',
+                            background: 'transparent', border: '1px solid var(--border)',
+                            color: 'var(--text-secondary)', borderRadius: '8px',
+                        }}>
+                            {q}
+                        </button>
+                    ))}
+                </div>
+            )}
         </div>
     )
 }
