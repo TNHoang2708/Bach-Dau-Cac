@@ -43,7 +43,7 @@ function DangNhap({ onBack }) {
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',
-            background: '#080808',
+            background: 'var(--bg)',
             position: 'relative',
             padding: '2rem',
         }}>
@@ -59,19 +59,20 @@ function DangNhap({ onBack }) {
                         alignItems: 'center',
                         gap: '8px',
                         padding: '10px 18px',
-                        background: 'rgba(255,255,255,0.05)',
-                        border: '1px solid rgba(255,255,255,0.12)',
-                        borderRadius: '8px',
-                        color: 'rgba(255,255,255,0.7)',
-                        fontSize: '14px',
-                        fontWeight: '600',
+                        background: 'transparent',
+                        border: 'none',
+                        borderRadius: '10px',
+                        color: 'rgba(255,255,255,0.5)',
+                        fontSize: '13px',
+                        fontWeight: '500',
                         cursor: 'pointer',
                         width: 'auto',
                         transition: 'all 0.2s ease',
                         zIndex: 100,
+                        padding: '8px 14px',
                     }}
-                    onMouseEnter={e => { e.currentTarget.style.borderColor = 'var(--accent)'; e.currentTarget.style.color = 'var(--accent)' }}
-                    onMouseLeave={e => { e.currentTarget.style.borderColor = 'rgba(255,255,255,0.12)'; e.currentTarget.style.color = 'rgba(255,255,255,0.7)' }}
+                    onMouseEnter={e => { e.currentTarget.style.background = 'rgba(255,255,255,0.06)'; e.currentTarget.style.color = '#fff' }}
+                    onMouseLeave={e => { e.currentTarget.style.background = 'transparent'; e.currentTarget.style.color = 'rgba(255,255,255,0.5)' }}
                 >
                     <ArrowLeft size={16} /> Quay lại
                 </button>
@@ -79,8 +80,8 @@ function DangNhap({ onBack }) {
 
             {/* Card */}
             <div style={{
-                background: '#111111',
-                border: '1px solid #2a2a2a',
+                background: 'var(--card)',
+                border: '1px solid var(--border)',
                 borderRadius: '20px',
                 padding: '2.5rem',
                 width: '100%',
@@ -90,7 +91,7 @@ function DangNhap({ onBack }) {
                 <div style={{ textAlign: 'center', marginBottom: '2rem' }}>
                     <div style={{
                         width: '56px', height: '56px',
-                        background: 'rgba(0,212,160,0.1)',
+                        background: 'var(--accent-dim)',
                         border: '1px solid rgba(0,212,160,0.25)',
                         borderRadius: '14px',
                         display: 'flex', alignItems: 'center', justifyContent: 'center',
@@ -112,7 +113,7 @@ function DangNhap({ onBack }) {
                 {/* Tab */}
                 <div style={{
                     display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '6px',
-                    background: '#1a1a1a', padding: '4px', borderRadius: '12px',
+                    background: 'var(--card2)', padding: '4px', borderRadius: '12px',
                     marginBottom: '1.5rem'
                 }}>
                     {[
@@ -174,20 +175,20 @@ function DangNhap({ onBack }) {
 
                 {/* Divider */}
                 <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '12px' }}>
-                    <div style={{ flex: 1, height: '1px', background: '#2a2a2a' }} />
+                    <div style={{ flex: 1, height: '1px', background: 'var(--border)' }} />
                     <span style={{ fontSize: '12px', color: '#aaa' }}>hoặc</span>
-                    <div style={{ flex: 1, height: '1px', background: '#2a2a2a' }} />
+                    <div style={{ flex: 1, height: '1px', background: 'var(--border)' }} />
                 </div>
 
                 {/* Google */}
                 <button onClick={handleGoogle} disabled={loading} style={{
-                    background: '#1a1a1a', color: '#fff', border: '1px solid #2a2a2a',
+                    background: 'var(--card2)', color: '#fff', border: '1px solid var(--border)',
                     display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '10px',
                     opacity: loading ? 0.7 : 1, width: '100%',
                     transition: 'border-color 0.2s',
                 }}
                     onMouseEnter={e => e.currentTarget.style.borderColor = 'var(--accent)'}
-                    onMouseLeave={e => e.currentTarget.style.borderColor = '#2a2a2a'}
+                    onMouseLeave={e => e.currentTarget.style.borderColor = 'var(--border)'}
                 >
                     <svg width="18" height="18" viewBox="0 0 48 48">
                         <path fill="#EA4335" d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.72 17.74 9.5 24 9.5z" />

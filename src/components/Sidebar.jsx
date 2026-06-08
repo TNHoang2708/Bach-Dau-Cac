@@ -1,4 +1,4 @@
-import { Home, Salad, Scale, BookOpen, LogOut, PanelLeft, Settings, HelpCircle, ChevronUp, Globe, ArrowUpCircle, Download, Info, ChevronRight, LayoutDashboard, UserCircle, MessageSquare, Bot } from 'lucide-react'
+import { Home, Salad, Scale, BookOpen, LogOut, PanelLeft, Settings, HelpCircle, ChevronUp, Globe, ArrowUpCircle, Download, Info, ChevronRight, LayoutDashboard, UserCircle, MessageSquare } from 'lucide-react'
 import { useAuth } from '../context/AuthContext'
 import { useNavigate, useLocation } from 'react-router-dom'
 import { useState, useRef, useEffect } from 'react'
@@ -14,7 +14,6 @@ function Sidebar({ isOpen, isCollapsed, isDesktop, onToggleCollapse, onClose }) 
             items: [
                 { path: '/', icon: <Home size={20} strokeWidth={2} />, label: 'Lịch tập' },
                 { path: '/dinh-duong', icon: <Salad size={20} strokeWidth={2} />, label: 'Dinh dưỡng' },
-                { path: '/ai-coach', icon: <Bot size={20} strokeWidth={2} />, label: 'AI Coach' },
             ]
         },
         {
@@ -235,12 +234,20 @@ function Sidebar({ isOpen, isCollapsed, isDesktop, onToggleCollapse, onClose }) 
 
                             <div style={{ height: '1px', background: 'var(--border)', margin: '4px 4px' }} />
 
-                            {renderRow({
-                                icon: <LogOut size={16} strokeWidth={2} />,
-                                label: 'Đăng xuất',
-                                danger: true,
-                                onClick: () => { setShowUserMenu(false); dangXuat() },
-                            })}
+                            <div
+                                onMouseDown={(e) => { e.stopPropagation(); setShowUserMenu(false); dangXuat() }}
+                                style={{
+                                    display: 'flex', alignItems: 'center', gap: '12px',
+                                    padding: '10px 12px', borderRadius: '8px', cursor: 'pointer',
+                                    fontSize: '14px', color: '#ef4444',
+                                    transition: 'background 0.15s',
+                                }}
+                                onMouseEnter={e => e.currentTarget.style.background = 'rgba(239,68,68,0.1)'}
+                                onMouseLeave={e => e.currentTarget.style.background = 'transparent'}
+                            >
+                                <span style={{ color: '#ef4444', display: 'flex' }}><LogOut size={16} strokeWidth={2} /></span>
+                                <span>Đăng xuất</span>
+                            </div>
                         </div>
                     , document.body)}
 

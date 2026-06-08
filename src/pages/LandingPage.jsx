@@ -77,24 +77,24 @@ function LandingPage({ onGetStarted }) {
                 {/* Logo */}
                 <div className="landing-logo">
                     <Dumbbell size={22} color='var(--accent)' strokeWidth={2.5} />
-                    <span style={{ fontWeight: '900', fontSize: '18px', letterSpacing: '0.05em', textTransform: 'uppercase' }}>Gym Planner AI</span>
+                    <span style={{ fontWeight: '700', fontSize: '15px', letterSpacing: '0.02em', textTransform: 'uppercase', color: '#fff' }}>Gym Planner AI</span>
                 </div>
 
                 {/* Desktop Menu */}
                 <div className="nav-links-desktop" >
                     {navLinks.map((item, i) => (
                         <span key={i} style={{
-                            fontSize: '14px',
-                            fontWeight: '600',
-                            color: 'rgba(255,255,255,0.7)',
+                            fontSize: '13px',
+                            fontWeight: '400',
+                            color: 'rgba(255,255,255,0.55)',
                             cursor: 'pointer',
-                            letterSpacing: '0.02em',
-                            transition: 'color 0.2s',
-                            fontFamily: "'Barlow', sans-serif",
+                            letterSpacing: '0',
+                            transition: 'color 0.15s',
+                            fontFamily: "'DM Sans', sans-serif",
                             whiteSpace: 'nowrap'
                         }}
-                            onMouseEnter={e => e.currentTarget.style.color = 'var(--accent)'}
-                            onMouseLeave={e => e.currentTarget.style.color = 'rgba(255,255,255,0.7)'}
+                            onMouseEnter={e => e.currentTarget.style.color = 'rgba(255,255,255,0.9)'}
+                            onMouseLeave={e => e.currentTarget.style.color = 'rgba(255,255,255,0.55)'}
                         >{item.label}</span>
                     ))}
                 </div>
@@ -104,7 +104,7 @@ function LandingPage({ onGetStarted }) {
                     <button className="btn-ghost" onClick={onGetStarted}>
                         Log in
                     </button>
-                    <button className="btn-primary" onClick={onGetStarted} style={{ padding: '10px 20px', fontSize: '14px' }}>
+                    <button className="btn-primary" onClick={onGetStarted}>
                         Sign up
                     </button>
                 </div>
