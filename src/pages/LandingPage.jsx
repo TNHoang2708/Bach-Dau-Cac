@@ -76,7 +76,7 @@ function LandingPage({ onGetStarted }) {
             <nav className="landing-navbar">
                 {/* Logo */}
                 <div className="landing-logo">
-                    <Dumbbell size={22} color='var(--accent)' strokeWidth={2.5} />
+                    <Dumbbell size={20} color='var(--accent)' strokeWidth={2} />
                     <span style={{ fontWeight: '700', fontSize: '15px', letterSpacing: '0.02em', textTransform: 'uppercase', color: '#fff' }}>Gym Planner AI</span>
                 </div>
 
@@ -100,11 +100,20 @@ function LandingPage({ onGetStarted }) {
                 </div>
 
                 {/* Desktop Buttons */}
-                <div style={{ display: 'flex', alignItems: 'center', gap: '10px', flexShrink: 0 }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '4px', flexShrink: 0 }}>
                     <button className="btn-ghost" onClick={onGetStarted}>
                         Log in
                     </button>
-                    <button className="btn-primary" onClick={onGetStarted}>
+                    <div style={{ width: '1px', height: '16px', background: 'rgba(255,255,255,0.12)', margin: '0 4px' }} />
+                    <button className="btn-primary" onClick={onGetStarted} style={{
+                        background: 'transparent',
+                        border: '1px solid rgba(255,255,255,0.25)',
+                        color: '#fff',
+                        borderRadius: '999px',
+                        padding: '7px 18px',
+                        fontSize: '13px',
+                        fontWeight: '500',
+                    }}>
                         Sign up
                     </button>
                 </div>
@@ -166,39 +175,108 @@ function LandingPage({ onGetStarted }) {
             </div>
 
             {/* HERO */}
-            <section className="hero-section">
-                <img src="https://images.unsplash.com/photo-1534438327276-14e5300c3a48?w=1600&q=80" alt="" style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'cover', objectPosition: 'center top', filter: 'brightness(0.5) contrast(1.1)' }} />
-                <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(105deg, rgba(8,8,8,1) 40%, rgba(8,8,8,0.3) 70%, transparent 100%)' }} />
-                <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(to top, rgba(0,212,160,0.15) 0%, transparent 40%)' }} />
-                <div style={{ position: 'absolute', inset: 0, background: 'radial-gradient(ellipse at 70% 50%, transparent 30%, rgba(8,8,8,0.6) 100%)' }} />
-                <div style={{ position: 'absolute', left: 0, top: '20%', bottom: '20%', width: '3px', background: 'linear-gradient(to bottom, transparent, var(--accent), transparent)' }} />
+            <section className="hero-section" style={{ position: 'relative', minHeight: '100vh', display: 'flex', alignItems: 'center', overflow: 'hidden', background: '#080808' }}>
+                {/* Hero image - right side */}
+                <div style={{
+                    position: 'absolute', right: 0, top: 0, bottom: 0,
+                    width: '55%',
+                    background: 'linear-gradient(to right, #080808 0%, transparent 30%)',
+                    zIndex: 2,
+                }} />
+                <img
+                    src="/src/assets/hero.jpg"
+                    alt=""
+                    style={{
+                        position: 'absolute', right: 0, top: 0,
+                        width: '55%', height: '100%',
+                        objectFit: 'cover', objectPosition: 'center top',
+                        filter: 'brightness(0.7) contrast(1.1) grayscale(0.2)',
+                    }}
+                />
+                {/* Red glow bottom */}
+                <div style={{ position: 'absolute', inset: 0, background: 'radial-gradient(ellipse at 60% 100%, rgba(225,29,72,0.15) 0%, transparent 60%)', zIndex: 1 }} />
+                {/* Left gradient overlay */}
+                <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(to right, #080808 45%, rgba(8,8,8,0.5) 70%, transparent 100%)', zIndex: 1 }} />
+                {/* Red accent line */}
+                <div style={{ position: 'absolute', left: '5rem', top: '20%', bottom: '20%', width: '2px', background: 'linear-gradient(to bottom, transparent, var(--accent), transparent)', zIndex: 3 }} />
 
-                <div className="hero-content">
-                    <h1 className="hero-title">
-                        SHAPE YOUR<br /><span style={{ color: 'var(--accent)' }}>BODY</span><br />WITH AI
-                    </h1>
-                    <p className="hero-description">
-                        Lịch tập cá nhân hóa, phân tích dinh dưỡng từ ảnh thông minh — hoàn toàn miễn phí.
-                    </p>
-                    <div style={{ animation: 'fadeInUp 0.8s ease 0.3s both' }}>
-                        <button className="btn-primary" onClick={onGetStarted}><Zap size={15} fill="#000" strokeWidth={0} /> Bắt đầu miễn phí</button>
+                {/* Hero content */}
+                <div style={{ position: 'relative', zIndex: 4, padding: '0 6rem', maxWidth: '700px' }}>
+                    {/* Badge */}
+                    <div style={{
+                        display: 'inline-flex', alignItems: 'center', gap: '8px',
+                        background: 'rgba(225,29,72,0.1)', border: '1px solid rgba(225,29,72,0.3)',
+                        borderRadius: '999px', padding: '6px 14px', marginBottom: '2rem',
+                        animation: 'fadeInUp 0.6s ease both',
+                    }}>
+                        <div style={{ width: '6px', height: '6px', borderRadius: '50%', background: 'var(--accent)', boxShadow: '0 0 8px var(--accent)' }} />
+                        <span style={{ fontSize: '12px', color: 'var(--accent)', fontWeight: 600, letterSpacing: '0.05em' }}>AI-POWERED FITNESS</span>
                     </div>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginTop: '2rem', animation: 'fadeInUp 0.8s ease 0.4s both' }}>
+
+                    <h1 style={{
+                        fontSize: 'clamp(52px, 7vw, 96px)',
+                        fontWeight: 900,
+                        lineHeight: 0.95,
+                        textTransform: 'uppercase',
+                        letterSpacing: '-2px',
+                        marginBottom: '1.5rem',
+                        fontFamily: "'Barlow Condensed', sans-serif",
+                        animation: 'fadeInUp 0.7s ease 0.1s both',
+                    }}>
+                        SHAPE<br />
+                        <span style={{ color: 'var(--accent)', WebkitTextStroke: '0px' }}>YOUR</span><br />
+                        BODY
+                    </h1>
+
+                    <p style={{
+                        fontSize: '16px', color: 'rgba(255,255,255,0.55)',
+                        lineHeight: 1.7, marginBottom: '2.5rem', maxWidth: '420px',
+                        fontFamily: "'DM Sans', sans-serif",
+                        animation: 'fadeInUp 0.7s ease 0.2s both',
+                    }}>
+                        Lịch tập AI cá nhân hóa. Phân tích dinh dưỡng từ ảnh.<br />Hoàn toàn miễn phí.
+                    </p>
+
+                    <div style={{ display: 'flex', gap: '12px', alignItems: 'center', animation: 'fadeInUp 0.7s ease 0.3s both' }}>
+                        <button className="btn-primary" onClick={onGetStarted} style={{ display: 'inline-flex', alignItems: 'center', gap: '8px', padding: '14px 32px', fontSize: '14px', fontWeight: 700 }}>
+                            <Zap size={16} /> Bắt đầu miễn phí
+                        </button>
+                        <button onClick={onGetStarted} style={{
+                            display: 'inline-flex', alignItems: 'center', gap: '8px',
+                            background: 'transparent', border: 'none', color: 'rgba(255,255,255,0.5)',
+                            fontSize: '14px', fontWeight: 500, cursor: 'pointer', width: 'auto', padding: '14px 0',
+                        }}
+                            onMouseEnter={e => e.currentTarget.style.color = '#fff'}
+                            onMouseLeave={e => e.currentTarget.style.color = 'rgba(255,255,255,0.5)'}
+                        >
+                            Xem tính năng <ChevronRight size={16} />
+                        </button>
+                    </div>
+
+                    {/* Stars */}
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginTop: '2.5rem', animation: 'fadeInUp 0.7s ease 0.4s both' }}>
                         {[...Array(5)].map((_, i) => <Star key={i} size={13} fill='#fbbf24' color='#fbbf24' />)}
-                        <span style={{ fontSize: '13px', fontFamily: "'Barlow', sans-serif", color: 'rgba(255,255,255,0.35)' }}>Được tin dùng bởi hàng ngàn người</span>
+                        <span style={{ fontSize: '13px', color: 'rgba(255,255,255,0.3)', fontFamily: "'DM Sans', sans-serif" }}>Được tin dùng bởi hàng ngàn người</span>
                     </div>
                 </div>
 
-                <div style={{ position: 'absolute', right: '5rem', bottom: '4rem', display: 'flex', gap: '4rem', animation: 'fadeInUp 0.8s ease 0.5s both' }}>
+                {/* Stats - bottom right */}
+                <div style={{
+                    position: 'absolute', right: '5rem', bottom: '4rem',
+                    display: 'flex', gap: '3rem', zIndex: 4,
+                    animation: 'fadeInUp 0.8s ease 0.5s both',
+                }}>
                     {stats.map((s, i) => (
-                        <div key={i}>
-                            <div style={{ fontSize: '40px', fontWeight: '900', color: 'var(--accent)', lineHeight: 1 }}>{s.number}</div>
-                            <div style={{ fontSize: '11px', fontFamily: "'Barlow', sans-serif", color: 'rgba(255,255,255,0.35)', textTransform: 'uppercase', letterSpacing: '0.1em', marginTop: '6px' }}>{s.label}</div>
+                        <div key={i} style={{ textAlign: 'center' }}>
+                            <div style={{ fontSize: '36px', fontWeight: 900, color: 'var(--accent)', lineHeight: 1, fontFamily: "'Barlow Condensed', sans-serif" }}>{s.number}</div>
+                            <div style={{ fontSize: '10px', color: 'rgba(255,255,255,0.3)', textTransform: 'uppercase', letterSpacing: '0.1em', marginTop: '6px' }}>{s.label}</div>
                         </div>
                     ))}
                 </div>
-                <div style={{ position: 'absolute', bottom: '2.5rem', left: '50%', transform: 'translateX(-50%)', animation: 'bounce 2s infinite' }}>
-                    <div style={{ width: '1px', height: '48px', background: 'linear-gradient(to bottom, transparent, rgba(0,212,160,0.5))' }} />
+
+                {/* Scroll indicator */}
+                <div style={{ position: 'absolute', bottom: '2rem', left: '50%', transform: 'translateX(-50%)', zIndex: 4, animation: 'bounce 2s infinite' }}>
+                    <div style={{ width: '1px', height: '48px', background: 'linear-gradient(to bottom, transparent, rgba(225,29,72,0.5))' }} />
                 </div>
             </section>
 
