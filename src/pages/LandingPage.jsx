@@ -101,9 +101,16 @@ function LandingPage({ onGetStarted }) {
 
                 {/* Desktop Buttons */}
                 <div style={{ display: 'flex', alignItems: 'center', gap: '4px', flexShrink: 0 }}>
-                    <button className="btn-ghost" onClick={onGetStarted}>
+                    <span onClick={onGetStarted} style={{
+                        color: 'rgba(255,255,255,0.55)', fontSize: '13px', fontWeight: 400,
+                        cursor: 'pointer', transition: 'color 0.15s', padding: '8px 12px',
+                        fontFamily: "'DM Sans', sans-serif",
+                    }}
+                        onMouseEnter={e => e.currentTarget.style.color = '#fff'}
+                        onMouseLeave={e => e.currentTarget.style.color = 'rgba(255,255,255,0.55)'}
+                    >
                         Log in
-                    </button>
+                    </span>
                     <div style={{ width: '1px', height: '16px', background: 'rgba(255,255,255,0.12)', margin: '0 4px' }} />
                     <button className="btn-primary" onClick={onGetStarted} style={{
                         background: 'transparent',
@@ -184,7 +191,7 @@ function LandingPage({ onGetStarted }) {
                     zIndex: 2,
                 }} />
                 <img
-                    src="/src/assets/hero.jpg"
+                    src="/src/assets/hero2.jpg"
                     alt=""
                     style={{
                         position: 'absolute', right: 0, top: 0,
@@ -241,16 +248,16 @@ function LandingPage({ onGetStarted }) {
                         <button className="btn-primary" onClick={onGetStarted} style={{ display: 'inline-flex', alignItems: 'center', gap: '8px', padding: '14px 32px', fontSize: '14px', fontWeight: 700 }}>
                             <Zap size={16} /> Bắt đầu miễn phí
                         </button>
-                        <button onClick={onGetStarted} style={{
-                            display: 'inline-flex', alignItems: 'center', gap: '8px',
-                            background: 'transparent', border: 'none', color: 'rgba(255,255,255,0.5)',
-                            fontSize: '14px', fontWeight: 500, cursor: 'pointer', width: 'auto', padding: '14px 0',
+                        <span onClick={onGetStarted} style={{
+                            display: 'inline-flex', alignItems: 'center', gap: '6px',
+                            color: 'rgba(255,255,255,0.45)', fontSize: '14px', fontWeight: 400,
+                            cursor: 'pointer', transition: 'color 0.2s',
                         }}
                             onMouseEnter={e => e.currentTarget.style.color = '#fff'}
-                            onMouseLeave={e => e.currentTarget.style.color = 'rgba(255,255,255,0.5)'}
+                            onMouseLeave={e => e.currentTarget.style.color = 'rgba(255,255,255,0.45)'}
                         >
-                            Xem tính năng <ChevronRight size={16} />
-                        </button>
+                            Xem tính năng <ChevronRight size={14} />
+                        </span>
                     </div>
 
                     {/* Stars */}

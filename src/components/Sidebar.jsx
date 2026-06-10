@@ -127,15 +127,16 @@ function Sidebar({ isOpen, isCollapsed, isDesktop, onToggleCollapse, onClose }) 
                     )}
                     <button
                         onClick={onToggleCollapse}
-                        onMouseEnter={e => e.currentTarget.style.background = 'rgba(255,255,255,0.08)'}
-                        onMouseLeave={e => e.currentTarget.style.background = 'transparent'}
                         style={{
                             background: 'transparent', border: 'none',
-                            color: 'var(--text-secondary)', cursor: 'pointer',
-                            padding: '8px', borderRadius: '8px',
+                            color: 'rgba(255,255,255,0.3)', cursor: 'pointer',
+                            padding: '8px', borderRadius: '0',
                             display: 'flex', alignItems: 'center', justifyContent: 'center',
                             width: '36px', height: '36px', flexShrink: 0,
+                            transition: 'color 0.15s',
                         }}
+                        onMouseEnter={e => e.currentTarget.style.color = '#fff'}
+                        onMouseLeave={e => e.currentTarget.style.color = 'rgba(255,255,255,0.3)'}
                     >
                         <PanelLeft size={18} strokeWidth={2} style={{ transform: isCollapsed ? 'rotate(180deg)' : 'none', transition: 'transform 0.25s' }} />
                     </button>

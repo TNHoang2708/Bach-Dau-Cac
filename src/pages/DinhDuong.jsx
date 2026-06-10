@@ -260,14 +260,17 @@ function DinhDuong() {
                             <button
                                 onClick={() => deleteMeal(buoi.id)}
                                 style={{
-                                    width: 'auto', padding: '6px 10px',
+                                    width: 'auto', padding: '6px 8px',
                                     background: 'transparent',
-                                    border: '1px solid var(--border)',
-                                    color: '#ef4444',
-                                    borderRadius: '8px',
+                                    border: 'none',
+                                    color: 'rgba(239,68,68,0.5)',
+                                    borderRadius: '0',
                                     cursor: 'pointer',
                                     display: 'flex', alignItems: 'center',
+                                    transition: 'color 0.15s',
                                 }}
+                                onMouseEnter={e => e.currentTarget.style.color = '#ef4444'}
+                                onMouseLeave={e => e.currentTarget.style.color = 'rgba(239,68,68,0.5)'}
                                 title="Xóa bữa ăn"
                             >
                                 <Trash2 size={14} />
