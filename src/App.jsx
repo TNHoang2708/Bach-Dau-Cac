@@ -8,8 +8,8 @@ import DangNhap from './pages/DangNhap'
 import NhatKy from './pages/NhatKy'
 import LandingPage from './pages/LandingPage'
 import Sidebar from './components/Sidebar'
-import ChatBox from './components/ChatBox'
 import Onboarding from './pages/Onboarding'
+import AICoachPage from './pages/AICoachPage'
 import { useAuth } from './context/AuthContext'
 import { useApp } from './context/AppContext'
 import { useState, useEffect } from 'react'
@@ -119,12 +119,12 @@ function AppLayout() {
                         <Route path="/bmi" element={<BMI />} />
                         <Route path="/nhat-ky" element={<NhatKy />} />
                         <Route path="/feedback" element={<Feedback />} />
+                        <Route path="/ai-coach" element={<AICoachPage />} />
                         <Route path="*" element={<Navigate to="/" />} />
                     </Routes>
                 </div>
             </div>
 
-            {user && <ChatBox />}
 
             <style>{`
                 @media (max-width: 768px) {

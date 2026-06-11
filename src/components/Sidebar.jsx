@@ -1,4 +1,4 @@
-import { Home, Salad, Scale, BookOpen, LogOut, PanelLeft, Settings, HelpCircle, ChevronUp, Globe, ArrowUpCircle, Download, Info, ChevronRight, LayoutDashboard, UserCircle, MessageSquare } from 'lucide-react'
+import { Home, Salad, Scale, BookOpen, LogOut, PanelLeft, Settings, HelpCircle, ChevronUp, Globe, ArrowUpCircle, Download, Info, ChevronRight, LayoutDashboard, UserCircle, MessageSquare, Sparkles } from 'lucide-react'
 import { useAuth } from '../context/AuthContext'
 import { useNavigate, useLocation } from 'react-router-dom'
 import { useState, useRef, useEffect } from 'react'
@@ -14,6 +14,7 @@ function Sidebar({ isOpen, isCollapsed, isDesktop, onToggleCollapse, onClose }) 
             items: [
                 { path: '/', icon: <Home size={20} strokeWidth={2} />, label: 'Lịch tập' },
                 { path: '/dinh-duong', icon: <Salad size={20} strokeWidth={2} />, label: 'Dinh dưỡng' },
+                { path: '/ai-coach', icon: <Sparkles size={20} strokeWidth={2} />, label: 'AI Coach' },
             ]
         },
         {
