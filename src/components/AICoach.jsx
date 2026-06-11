@@ -3,7 +3,7 @@ import { Send, Sparkles, Brain } from 'lucide-react'
 import { useAuth } from '../context/AuthContext'
 import { useFood } from '../context/FoodContext'
 import { db } from '../firebase'
-import { doc, getDoc, setDoc, updateDoc, arrayUnion, serverTimestamp } from 'firebase/firestore'
+import { doc, getDoc, setDoc, arrayUnion } from 'firebase/firestore'
 import { callGemini } from '../utils/gemini'
 
 const GEMINI_KEY = import.meta.env.VITE_GEMINI_KEY
@@ -63,6 +63,7 @@ async function updateEmotionalMemory(uid, mood, context) {
                 emotionalMemory: {
                     recentMoods: arrayUnion(entry),
                     lastEmotionalState: mood,
+                    lastEmotionalAt: new Date().toISOString(),
                 }
             },
             { merge: true }
@@ -85,10 +86,24 @@ async function updateSessionMeta(uid, topics = []) {
     } catch (e) { console.error('Session meta error:', e) }
 }
 
-function daysSinceLastSeen(lastSeenAt) {
-    if (!lastSeenAt) return null
-    const diff = Date.now() - new Date(lastSeenAt).getTime()
-    return Math.floor(diff / (1000 * 60 * 60 * 24))
+function daysSince(isoString) {
+    if (!isoString) return null
+    return Math.floor((Date.now() - new Date(isoString).getTime()) / (1000 * 60 * 60 * 24))
+}
+
+// Emotional memory decay — chỉ giữ mood trong vòng 30 ngày
+function getRecentMoods(emotionalMemory) {
+    return (emotionalMemory?.recentMoods || []).filter(m => {
+        const days = daysSince(m.timestamp)
+        return days !== null && days <= 30
+    })
+}
+
+// lastEmotionalState chỉ còn hiệu lực nếu trong 30 ngày
+function getActiveEmotionalState(emotionalMemory) {
+    const days = daysSince(emotionalMemory?.lastEmotionalAt)
+    if (days === null || days > 30) return null
+    return emotionalMemory?.lastEmotionalState || null
 }
 
 function buildGreeting(name, mem) {
@@ -97,10 +112,11 @@ function buildGreeting(name, mem) {
         goal === 'fat_loss' ? 'giảm mỡ' :
             goal === 'strength' ? 'tăng sức mạnh' : 'cải thiện sức khỏe'
 
-    const lastMood = mem?.emotionalMemory?.lastEmotionalState
-    const days = daysSinceLastSeen(mem?.sessionMeta?.lastSeenAt)
+    const lastMood = getActiveEmotionalState(mem?.emotionalMemory)
+    const days = daysSince(mem?.sessionMeta?.lastSeenAt)
     const notes = mem?.softMemory?.notes || []
     const lastNote = notes[notes.length - 1]
+    const lastTopics = mem?.sessionMeta?.lastTopics || []
 
     if (days === null) {
         return `Chào ${name}! Mình là AI Coach của bạn.\n\nMình nhớ bạn đang hướng tới mục tiêu **${goalText}**. Hôm nay bạn cần mình giúp gì?`
@@ -114,18 +130,26 @@ function buildGreeting(name, mem) {
         return `Chào ${name}! ${days} ngày rồi mới thấy bạn.\n\n${lastNote ? `Lần trước mình có ghi lại: "${lastNote}". ` : ''}Hôm nay bạn thế nào?`
     }
 
+    // Chỉ nhắc mood nếu còn trong 30 ngày
     if (lastMood === 'tired' || lastMood === 'stressed' || lastMood === 'sad') {
         return `Chào ${name}! Hôm qua bạn có vẻ không được ổn lắm.\n\nHôm nay cảm thấy thế nào rồi? Nghỉ ngơi đủ chưa?`
+    }
+
+    if (lastTopics.length > 0) {
+        return `Chào ${name}! Hôm nay mình có thể giúp gì cho bạn?\n\nHôm qua mình đang nói về **${lastTopics[0]}** — bạn có muốn tiếp không?`
     }
 
     return `Chào ${name}! Hôm nay mình có thể giúp gì cho bạn?`
 }
 
-// [BƯỚC 3] System prompt với emotional detection chủ động + proactive recall
 function buildSystemPrompt(memory, todayData) {
     const hard = memory?.hardMemory || {}
     const soft = memory?.softMemory || {}
-    const emotional = memory?.emotionalMemory || {}
+    const session = memory?.sessionMeta || {}
+
+    // Chỉ dùng mood còn trong 30 ngày
+    const recentMoods = getRecentMoods(memory?.emotionalMemory)
+    const lastEmotionalState = getActiveEmotionalState(memory?.emotionalMemory)
 
     const hardText = `
 - Giới tính: ${hard.gender || '?'}
@@ -147,9 +171,12 @@ function buildSystemPrompt(memory, todayData) {
 - Thích: ${(soft.likes || []).join(', ') || 'chưa biết'}
 - Ghi chú từ các buổi trước: ${(soft.notes || []).slice(-5).join(' | ') || 'chưa có'}`
 
-    const emotionalText = `
-- Trạng thái cảm xúc gần nhất: ${emotional.lastEmotionalState || 'chưa có'}
-- Lịch sử tâm trạng: ${(emotional.recentMoods || []).slice(-3).map(m => `${m.mood} (${m.context})`).join(', ') || 'chưa có'}`
+    // Emotional context — chỉ hiện nếu còn trong 30 ngày
+    const emotionalText = lastEmotionalState
+        ? `\n- Tâm trạng gần đây (30 ngày): ${recentMoods.slice(-3).map(m => `${m.mood} (${m.context})`).join(', ')}`
+        : `\n- Tâm trạng: chưa có dữ liệu gần đây`
+
+    const sessionText = `\n- Chủ đề buổi trước: ${(session.lastTopics || []).join(', ') || 'chưa có'}`
 
     const todayText = todayData ? `
 - Đã nạp: ${todayData.calories}/${todayData.goalCalories} kcal
@@ -160,24 +187,27 @@ function buildSystemPrompt(memory, todayData) {
 
 TÍNH CÁCH: Thân thiện, quan tâm, lắng nghe thật sự. Không phải chatbot — bạn là người bạn đồng hành của user.
 
-[Thông tin cơ bản]${hardText}
+[Thông tin cơ bản — nhớ mãi]${hardText}
 
 [Sở thích & thói quen]${softText}
 
-[Cảm xúc & tâm trạng]${emotionalText}
+[Tâm trạng gần đây — chỉ trong 30 ngày]${emotionalText}
+
+[Buổi trước]${sessionText}
 
 [Hôm nay]${todayText}
 
 QUY TẮC:
-1. Trả lời bằng tiếng Việt, tự nhiên như người thật — không cứng nhắc, không robot
-2. NHẬN DIỆN CẢM XÚC CHỦ ĐỘNG: Dù user không nói thẳng là mệt/stress, hãy đọc tone của họ. Trả lời cụt, "oke", "hmm", im lặng rồi hỏi ngắn — đều có thể là dấu hiệu không ổn. Khi nghi ngờ, hỏi nhẹ nhàng
-3. KHI USER ĐANG KHÔNG ỔN: Lắng nghe trước — hỏi thêm — KHÔNG push lịch tập hay calo ngay. Đợi user sẵn sàng rồi mới tư vấn
-4. KHI USER HỎI TƯ VẤN: Trả lời cụ thể dựa trên thông tin của họ, không chung chung
-5. PROACTIVE RECALL — nhắc lại thông tin user đã chia sẻ đúng lúc, tự nhiên. Ví dụ: nếu user hỏi lịch tập mà mình biết họ ghét cardio thì không đưa cardio vào. Nếu user nói mệt mà trước đó từng kể hay bị stress vì công việc thì có thể nhắc lại nhẹ. KHÔNG nhắc máy móc kiểu "theo thông tin của bạn thì..."
+1. Trả lời bằng tiếng Việt, tự nhiên như người thật
+2. NHẬN DIỆN CẢM XÚC CHỦ ĐỘNG: đọc tone của user, "oke", "hmm" cụt — có thể là dấu hiệu không ổn
+3. KHI USER ĐANG KHÔNG ỔN: lắng nghe trước, hỏi thêm, KHÔNG push lịch tập hay calo ngay
+4. KHI USER HỎI TƯ VẤN: trả lời cụ thể dựa trên thông tin của họ
+5. PROACTIVE RECALL: nhắc lại thông tin user đã chia sẻ tự nhiên — KHÔNG máy móc. Chấn thương thì nhớ mãi. Chuyện cảm xúc cũ hơn 30 ngày thì KHÔNG gợi lại
 6. Nếu user chia sẻ thông tin mới quan trọng → cuối reply thêm: [MEMORY: nội dung ngắn gọn]
-7. Nếu detect được user đang mệt/stressed/buồn/không ổn (dù họ không nói thẳng) → cuối reply thêm: [EMOTION: mood|lý do ngắn gọn]
+7. Nếu detect được user đang mệt/stressed/buồn → cuối reply thêm: [EMOTION: mood|lý do ngắn gọn]
    - mood chỉ dùng: tired / stressed / sad / motivated / happy / neutral
-8. Không hỏi lại những gì user đã trả lời trong onboarding`
+8. Sau mỗi reply, tóm tắt chủ đề → cuối reply thêm: [TOPIC: chủ đề ngắn gọn]
+9. Không hỏi lại những gì user đã trả lời trong onboarding`
 }
 
 const QUICK_REPLIES = [
@@ -196,6 +226,7 @@ export default function AICoach() {
     const [apiMessages, setApiMessages] = useState([])
     const [memory, setMemory] = useState(null)
     const [memoryLoaded, setMemoryLoaded] = useState(false)
+    const [currentTopics, setCurrentTopics] = useState([])
     const chatEndRef = useRef(null)
 
     useEffect(() => {
@@ -242,7 +273,7 @@ export default function AICoach() {
         try {
             const data = await callGemini(GEMINI_KEY, {
                 contents: updatedMessages,
-                generationConfig: { maxOutputTokens: 600 }
+                generationConfig: { maxOutputTokens: 800 }
             })
             let reply = data.candidates?.[0]?.content?.parts?.[0]?.text || 'Xin lỗi, mình không trả lời được!'
 
@@ -270,6 +301,7 @@ export default function AICoach() {
                     emotionalMemory: {
                         ...(prev?.emotionalMemory || {}),
                         lastEmotionalState: mood,
+                        lastEmotionalAt: new Date().toISOString(),
                         recentMoods: [
                             ...(prev?.emotionalMemory?.recentMoods || []).slice(-9),
                             { mood, context, timestamp: new Date().toISOString() }
@@ -277,6 +309,15 @@ export default function AICoach() {
                     }
                 }))
                 reply = reply.replace(/\[EMOTION:.*?\]/s, '').trim()
+            }
+
+            const topicMatch = reply.match(/\[TOPIC:\s*(.+?)\]/s)
+            if (topicMatch && user) {
+                const topic = topicMatch[1].trim()
+                const updatedTopics = [topic, ...currentTopics].slice(0, 3)
+                setCurrentTopics(updatedTopics)
+                updateSessionMeta(user.uid, updatedTopics)
+                reply = reply.replace(/\[TOPIC:.*?\]/s, '').trim()
             }
 
             setMessages(prev => [...prev, { role: 'ai', content: reply }])

@@ -245,14 +245,14 @@ export default function Onboarding({ onComplete }) {
                 Object.entries(obj).filter(([, v]) => v !== undefined && v !== null)
             )
             const profile = {
-                ...clean(answers),
+                // Chỉ giữ các field cần thiết, bỏ flat fields cũ
                 onboardingCompleted: true,
                 onboardingCompletedAt: serverTimestamp(),
                 hardMemory: clean({
                     gender: answers.gender || '',
                     ageGroup: answers.ageGroup || '',
                     height: answers.height || '',
-                    weight: answers.weight || '',
+                    weight: answers.weight || '',  // đảm bảo weight có ở đây
                     bodyType: answers.bodyType || '',
                     injuries: answers.injuries || [],
                 }),

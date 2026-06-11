@@ -1,10 +1,10 @@
-import { Home, Salad, Scale, BookOpen, LogOut, PanelLeft, Settings, HelpCircle, ChevronUp, Globe, ArrowUpCircle, Download, Info, ChevronRight, LayoutDashboard, UserCircle, MessageSquare, Sparkles } from 'lucide-react'
+import { Home, Salad, Scale, BookOpen, LogOut, PanelLeft, Settings, HelpCircle, ChevronUp, ChevronRight, LayoutDashboard, UserCircle, MessageSquare, Sparkles } from 'lucide-react'
 import { useAuth } from '../context/AuthContext'
 import { useNavigate, useLocation } from 'react-router-dom'
 import { useState, useRef, useEffect } from 'react'
 import { createPortal } from 'react-dom'
 
-function Sidebar({ isOpen, isCollapsed, isDesktop, onToggleCollapse, onClose }) {
+function Sidebar({ isCollapsed, onToggleCollapse }) {
     const { user, dangXuat } = useAuth()
     const navigate = useNavigate()
     const location = useLocation()
@@ -35,7 +35,6 @@ function Sidebar({ isOpen, isCollapsed, isDesktop, onToggleCollapse, onClose }) 
             ]
         },
     ]
-    const menuItems = menuGroups.flatMap(g => g.items)
 
     const [showUserMenu, setShowUserMenu] = useState(false)
     const userMenuRef = useRef(null)
@@ -50,15 +49,9 @@ function Sidebar({ isOpen, isCollapsed, isDesktop, onToggleCollapse, onClose }) 
         return () => document.removeEventListener('mousedown', handle)
     }, [])
 
-    const handleNavigation = (path) => {
-        navigate(path)
-        if (window.innerWidth <= 1024) onClose()
-    }
-
     const w = isCollapsed ? '64px' : '280px'
 
-    // Reusable row renderer
-    const renderRow = ({ icon, label, shortcut, trailing, danger, onClick }) => (
+    const renderRow = ({ icon, label, trailing, danger, onClick }) => (
         <div
             onClick={onClick}
             style={{
@@ -72,234 +65,194 @@ function Sidebar({ isOpen, isCollapsed, isDesktop, onToggleCollapse, onClose }) 
         >
             <span style={{ color: danger ? '#ef4444' : 'var(--text-secondary)', display: 'flex' }}>{icon}</span>
             <span style={{ flex: 1, overflow: 'hidden', textOverflow: 'ellipsis' }}>{label}</span>
-            {shortcut && (
-                <span style={{ fontSize: '12px', color: 'var(--text-secondary)' }}>{shortcut}</span>
-            )}
-            {trailing && (
-                <span style={{ color: 'var(--text-secondary)', display: 'flex' }}>{trailing}</span>
-            )}
+            {trailing && <span style={{ color: 'var(--text-secondary)', display: 'flex' }}>{trailing}</span>}
         </div>
     )
 
     return (
-        <>
-            {/* Overlay mobile only */}
-            <div
-                onClick={onClose}
-                style={{
-                    position: 'fixed', inset: 0,
-                    background: 'rgba(0,0,0,0.55)',
-                    zIndex: 998,
-                    opacity: (!isDesktop && isOpen) ? 1 : 0,
-                    pointerEvents: (!isDesktop && isOpen) ? 'auto' : 'none',
-                    transition: 'opacity 0.25s ease',
-                }}
-            />
-
-            <div
-                className="sidebar"
-                style={{
-                    position: 'fixed',
-                    top: 0, left: 0, bottom: 0,
-                    width: w,
-                    background: 'var(--card)',
-                    borderRight: '1px solid var(--border)',
-                    display: 'flex',
-                    flexDirection: 'column',
-                    zIndex: 999,
-                    transition: 'transform 0.25s cubic-bezier(0.4,0,0.2,1), width 0.25s cubic-bezier(0.4,0,0.2,1)',
-                    transform: isOpen ? 'translateX(0)' : 'translateX(-110%)',
-                    overflow: 'hidden',
-                }}
-            >
-                {/* Header */}
-                <div style={{
-                    borderBottom: '1px solid var(--border)',
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: isCollapsed ? 'center' : 'space-between',
-                    minHeight: '56px',
-                    padding: '0 12px',
-                }}>
-                    {!isCollapsed && (
-                        <span style={{ fontWeight: '900', fontSize: '15px', letterSpacing: '0.05em', textTransform: 'uppercase', color: 'var(--text)', whiteSpace: 'nowrap' }}>
-                            Gym Planner AI
-                        </span>
-                    )}
-                    <button
-                        onClick={onToggleCollapse}
-                        style={{
-                            background: 'transparent', border: 'none',
-                            color: 'rgba(255,255,255,0.3)', cursor: 'pointer',
-                            padding: '8px', borderRadius: '0',
-                            display: 'flex', alignItems: 'center', justifyContent: 'center',
-                            width: '36px', height: '36px', flexShrink: 0,
-                            transition: 'color 0.15s',
-                        }}
-                        onMouseEnter={e => e.currentTarget.style.color = '#fff'}
-                        onMouseLeave={e => e.currentTarget.style.color = 'rgba(255,255,255,0.3)'}
-                    >
-                        <PanelLeft size={18} strokeWidth={2} style={{ transform: isCollapsed ? 'rotate(180deg)' : 'none', transition: 'transform 0.25s' }} />
-                    </button>
-                </div>
-
-                {/* Menu Items */}
-                <div style={{ flex: 1, padding: isCollapsed ? '0.5rem 0' : '0.5rem 0.75rem', overflow: 'hidden' }}>
-                    {menuGroups.map((group, gi) => (
-                        <div key={gi}>
-                            {gi > 0 && <div style={{ height: '1px', background: 'var(--border)', margin: isCollapsed ? '6px 0' : '6px 8px' }} />}
-                            {group.items.map((item) => {
-                                const active = location.pathname === item.path
-                                return (
-                                    <div
-                                        key={item.path}
-                                        onClick={() => handleNavigation(item.path)}
-                                        title={isCollapsed ? item.label : ''}
-                                        style={{
-                                            display: 'flex',
-                                            alignItems: 'center',
-                                            justifyContent: isCollapsed ? 'center' : 'flex-start',
-                                            gap: '12px',
-                                            padding: isCollapsed ? '12px 0' : '11px 16px',
-                                            borderRadius: isCollapsed ? '0' : '12px',
-                                            marginBottom: '2px',
-                                            cursor: 'pointer',
-                                            background: active ? 'var(--accent-dim)' : 'transparent',
-                                            color: active ? 'var(--accent)' : 'var(--text-secondary)',
-                                            transition: 'all 0.15s',
-                                            borderLeft: isCollapsed && active ? '2px solid var(--accent)' : isCollapsed ? '2px solid transparent' : 'none',
-                                        }}
-                                        onMouseEnter={(e) => { if (!active) { e.currentTarget.style.background = 'rgba(255,255,255,0.05)'; e.currentTarget.style.color = 'var(--text)' } }}
-                                        onMouseLeave={(e) => { if (!active) { e.currentTarget.style.background = 'transparent'; e.currentTarget.style.color = 'var(--text-secondary)' } }}
-                                    >
-                                        {item.icon}
-                                        {!isCollapsed && <span style={{ fontSize: '14px', fontWeight: '500', whiteSpace: 'nowrap' }}>{item.label}</span>}
-                                    </div>
-                                )
-                            })}
-                        </div>
-                    ))}
-                </div>
-
-                {/* User button + popup */}
-                <div ref={userMenuRef} style={{ position: 'relative', borderTop: '1px solid var(--border)' }}>
-                    {showUserMenu && createPortal(
-                        <div style={{
-                            position: 'fixed',
-                            bottom: '70px',
-                            left: isCollapsed ? '8px' : '8px',
-                            width: isCollapsed ? '220px' : '240px',
-                            background: '#2a2a2a',
-                            border: '1px solid rgba(255,255,255,0.08)',
-                            borderRadius: '20px',
-                            padding: '8px',
-                            boxShadow: '0 8px 32px rgba(0,0,0,0.6)',
-                            zIndex: 9999,
-                        }}>
-                            {/* Header: avatar + tên */}
-                            <div
-                                onClick={() => { setShowUserMenu(false); window.location.href = '/profile' }}
-                                style={{
-                                    display: 'flex', alignItems: 'center',
-                                    justifyContent: 'space-between',
-                                    padding: '10px 14px 14px',
-                                    borderRadius: '12px',
-                                    cursor: 'pointer',
-                                    transition: 'background 0.15s',
-                                    marginBottom: '2px',
-                                    borderBottom: '1px solid rgba(255,255,255,0.07)',
-                                    paddingBottom: '14px',
-                                    marginBottom: '6px',
-                                }}
-                                onMouseEnter={e => e.currentTarget.style.background = 'rgba(255,255,255,0.06)'}
-                                onMouseLeave={e => e.currentTarget.style.background = 'transparent'}
-                            >
-                                <div style={{ display: 'flex', alignItems: 'center', gap: '12px', overflow: 'hidden' }}>
-                                    {user?.photoURL
-                                        ? <img src={user.photoURL} alt="avatar" style={{ width: '44px', height: '44px', borderRadius: '50%', objectFit: 'cover', flexShrink: 0 }} />
-                                        : <div style={{ width: '44px', height: '44px', borderRadius: '50%', background: 'var(--accent)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '18px', fontWeight: 700, color: '#000', flexShrink: 0 }}>
-                                            {(user?.displayName || user?.email || 'U')[0].toUpperCase()}
-                                          </div>
-                                    }
-                                    <div style={{ overflow: 'hidden' }}>
-                                        <div style={{ fontWeight: 600, fontSize: '15px', color: '#fff', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
-                                            {user?.displayName || user?.email?.split('@')[0] || 'User'}
-                                        </div>
-                                        <div style={{ fontSize: '12px', color: 'rgba(255,255,255,0.45)', marginTop: '2px' }}>Free</div>
-                                    </div>
-                                </div>
-                                <ChevronRight size={16} strokeWidth={2} style={{ color: 'rgba(255,255,255,0.4)', flexShrink: 0 }} />
-                            </div>
-
-                            {renderRow({ icon: <Settings size={16} strokeWidth={2} />, label: 'Cài đặt' })}
-                            {renderRow({ icon: <HelpCircle size={16} strokeWidth={2} />, label: 'Trợ giúp', trailing: <ChevronRight size={14} strokeWidth={2} /> })}
-
-                            <div style={{ height: '1px', background: 'var(--border)', margin: '4px 4px' }} />
-
-                            <div
-                                onMouseDown={(e) => { e.stopPropagation(); setShowUserMenu(false); dangXuat() }}
-                                style={{
-                                    display: 'flex', alignItems: 'center', gap: '12px',
-                                    padding: '10px 12px', borderRadius: '8px', cursor: 'pointer',
-                                    fontSize: '14px', color: '#ef4444',
-                                    transition: 'background 0.15s',
-                                }}
-                                onMouseEnter={e => e.currentTarget.style.background = 'rgba(239,68,68,0.1)'}
-                                onMouseLeave={e => e.currentTarget.style.background = 'transparent'}
-                            >
-                                <span style={{ color: '#ef4444', display: 'flex' }}><LogOut size={16} strokeWidth={2} /></span>
-                                <span>Đăng xuất</span>
-                            </div>
-                        </div>
-                    , document.body)}
-
-                    {/* User button */}
-                    <div onClick={() => setShowUserMenu(prev => !prev)}
-                        style={{
-                            display: 'flex', alignItems: 'center',
-                            justifyContent: isCollapsed ? 'center' : 'space-between',
-                            padding: isCollapsed ? '12px 0' : '12px 14px',
-                            cursor: 'pointer',
-                            background: showUserMenu ? 'rgba(255,255,255,0.05)' : 'transparent',
-                            transition: 'background 0.15s'
-                        }}
-                        onMouseEnter={e => { if (!showUserMenu) e.currentTarget.style.background = 'rgba(255,255,255,0.04)' }}
-                        onMouseLeave={e => { if (!showUserMenu) e.currentTarget.style.background = 'transparent' }}
-                    >
-                        <div style={{ display: 'flex', alignItems: 'center', gap: '10px', overflow: 'hidden' }}>
-                            <img
-                                src={user?.photoURL || `https://ui-avatars.com/api/?name=${user?.email || 'User'}&background=3b82f6&color=000`}
-                                alt="avatar"
-                                style={{ width: '32px', height: '32px', borderRadius: '50%', objectFit: 'cover', border: '2px solid var(--accent)', flexShrink: 0 }}
-                            />
-                            {!isCollapsed && (
-                                <div style={{ overflow: 'hidden' }}>
-                                    <div style={{ fontWeight: '600', fontSize: '13px', color: 'var(--text)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
-                                        {user?.displayName || user?.email?.split('@')[0] || 'User'}
-                                    </div>
-                                    <div style={{ fontSize: '11px', color: 'var(--text-secondary)' }}>Free plan</div>
-                                </div>
-                            )}
-                        </div>
-                        {!isCollapsed && (
-                            <ChevronUp size={14} strokeWidth={2} style={{
-                                color: 'var(--text-secondary)', flexShrink: 0,
-                                transform: showUserMenu ? 'rotate(180deg)' : 'none',
-                                transition: 'transform 0.2s'
-                            }} />
-                        )}
-                    </div>
-                </div>
+        <div
+            style={{
+                position: 'fixed',
+                top: 0, left: 0, bottom: 0,
+                width: w,
+                background: 'var(--card)',
+                borderRight: '1px solid var(--border)',
+                display: 'flex',
+                flexDirection: 'column',
+                zIndex: 999,
+                transition: 'width 0.25s cubic-bezier(0.4,0,0.2,1)',
+                overflow: 'hidden',
+            }}
+        >
+            {/* Header */}
+            <div style={{
+                borderBottom: '1px solid var(--border)',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: isCollapsed ? 'center' : 'space-between',
+                minHeight: '56px',
+                padding: '0 12px',
+            }}>
+                {!isCollapsed && (
+                    <span style={{ fontWeight: '900', fontSize: '15px', letterSpacing: '0.05em', textTransform: 'uppercase', color: 'var(--text)', whiteSpace: 'nowrap' }}>
+                        Gym Planner AI
+                    </span>
+                )}
+                <button
+                    onClick={onToggleCollapse}
+                    style={{
+                        background: 'transparent', border: 'none',
+                        color: 'rgba(255,255,255,0.3)', cursor: 'pointer',
+                        padding: '8px',
+                        display: 'flex', alignItems: 'center', justifyContent: 'center',
+                        width: '36px', height: '36px', flexShrink: 0,
+                        transition: 'color 0.15s',
+                    }}
+                    onMouseEnter={e => e.currentTarget.style.color = '#fff'}
+                    onMouseLeave={e => e.currentTarget.style.color = 'rgba(255,255,255,0.3)'}
+                >
+                    <PanelLeft size={18} strokeWidth={2} style={{ transform: isCollapsed ? 'rotate(180deg)' : 'none', transition: 'transform 0.25s' }} />
+                </button>
             </div>
 
-            <style>{`
-                @media (min-width: 1025px) {
-                    .sidebar {
-                        transform: translateX(0) !important;
-                    }
-                }
-            `}</style>
-        </>
+            {/* Menu Items */}
+            <div style={{ flex: 1, padding: isCollapsed ? '0.5rem 0' : '0.5rem 0.75rem', overflowY: 'auto', overflowX: 'hidden' }}>
+                {menuGroups.map((group, gi) => (
+                    <div key={gi}>
+                        {gi > 0 && <div style={{ height: '1px', background: 'var(--border)', margin: isCollapsed ? '6px 0' : '6px 8px' }} />}
+                        {group.items.map((item) => {
+                            const active = location.pathname === item.path
+                            return (
+                                <div
+                                    key={item.path}
+                                    onClick={() => navigate(item.path)}
+                                    title={isCollapsed ? item.label : ''}
+                                    style={{
+                                        display: 'flex',
+                                        alignItems: 'center',
+                                        justifyContent: isCollapsed ? 'center' : 'flex-start',
+                                        gap: '12px',
+                                        padding: isCollapsed ? '12px 0' : '11px 16px',
+                                        borderRadius: isCollapsed ? '0' : '12px',
+                                        marginBottom: '2px',
+                                        cursor: 'pointer',
+                                        background: active ? 'var(--accent-dim)' : 'transparent',
+                                        color: active ? 'var(--accent)' : 'var(--text-secondary)',
+                                        transition: 'all 0.15s',
+                                        borderLeft: isCollapsed && active ? '2px solid var(--accent)' : isCollapsed ? '2px solid transparent' : 'none',
+                                    }}
+                                    onMouseEnter={(e) => { if (!active) { e.currentTarget.style.background = 'rgba(255,255,255,0.05)'; e.currentTarget.style.color = 'var(--text)' } }}
+                                    onMouseLeave={(e) => { if (!active) { e.currentTarget.style.background = 'transparent'; e.currentTarget.style.color = 'var(--text-secondary)' } }}
+                                >
+                                    {item.icon}
+                                    {!isCollapsed && <span style={{ fontSize: '14px', fontWeight: '500', whiteSpace: 'nowrap' }}>{item.label}</span>}
+                                </div>
+                            )
+                        })}
+                    </div>
+                ))}
+            </div>
+
+            {/* User button + popup */}
+            <div ref={userMenuRef} style={{ position: 'relative', borderTop: '1px solid var(--border)' }}>
+                {showUserMenu && createPortal(
+                    <div style={{
+                        position: 'fixed',
+                        bottom: '70px',
+                        left: '8px',
+                        width: '240px',
+                        background: '#2a2a2a',
+                        border: '1px solid rgba(255,255,255,0.08)',
+                        borderRadius: '20px',
+                        padding: '8px',
+                        boxShadow: '0 8px 32px rgba(0,0,0,0.6)',
+                        zIndex: 9999,
+                    }}>
+                        <div
+                            onClick={() => { setShowUserMenu(false); navigate('/profile') }}
+                            style={{
+                                display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+                                padding: '10px 14px 14px', borderRadius: '12px', cursor: 'pointer',
+                                transition: 'background 0.15s', borderBottom: '1px solid rgba(255,255,255,0.07)', marginBottom: '6px',
+                            }}
+                            onMouseEnter={e => e.currentTarget.style.background = 'rgba(255,255,255,0.06)'}
+                            onMouseLeave={e => e.currentTarget.style.background = 'transparent'}
+                        >
+                            <div style={{ display: 'flex', alignItems: 'center', gap: '12px', overflow: 'hidden' }}>
+                                {user?.photoURL
+                                    ? <img src={user.photoURL} alt="avatar" style={{ width: '44px', height: '44px', borderRadius: '50%', objectFit: 'cover', flexShrink: 0 }} />
+                                    : <div style={{ width: '44px', height: '44px', borderRadius: '50%', background: 'var(--accent)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '18px', fontWeight: 700, color: '#000', flexShrink: 0 }}>
+                                        {(user?.displayName || user?.email || 'U')[0].toUpperCase()}
+                                      </div>
+                                }
+                                <div style={{ overflow: 'hidden' }}>
+                                    <div style={{ fontWeight: 600, fontSize: '15px', color: '#fff', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                                        {user?.displayName || user?.email?.split('@')[0] || 'User'}
+                                    </div>
+                                    <div style={{ fontSize: '12px', color: 'rgba(255,255,255,0.45)', marginTop: '2px' }}>Free</div>
+                                </div>
+                            </div>
+                            <ChevronRight size={16} strokeWidth={2} style={{ color: 'rgba(255,255,255,0.4)', flexShrink: 0 }} />
+                        </div>
+
+                        {renderRow({ icon: <Settings size={16} strokeWidth={2} />, label: 'Cài đặt' })}
+                        {renderRow({ icon: <HelpCircle size={16} strokeWidth={2} />, label: 'Trợ giúp', trailing: <ChevronRight size={14} strokeWidth={2} /> })}
+
+                        <div style={{ height: '1px', background: 'var(--border)', margin: '4px' }} />
+
+                        <div
+                            onMouseDown={(e) => { e.stopPropagation(); setShowUserMenu(false); dangXuat() }}
+                            style={{
+                                display: 'flex', alignItems: 'center', gap: '12px',
+                                padding: '10px 12px', borderRadius: '8px', cursor: 'pointer',
+                                fontSize: '14px', color: '#ef4444', transition: 'background 0.15s',
+                            }}
+                            onMouseEnter={e => e.currentTarget.style.background = 'rgba(239,68,68,0.1)'}
+                            onMouseLeave={e => e.currentTarget.style.background = 'transparent'}
+                        >
+                            <span style={{ color: '#ef4444', display: 'flex' }}><LogOut size={16} strokeWidth={2} /></span>
+                            <span>Đăng xuất</span>
+                        </div>
+                    </div>
+                , document.body)}
+
+                <div onClick={() => setShowUserMenu(prev => !prev)}
+                    style={{
+                        display: 'flex', alignItems: 'center',
+                        justifyContent: isCollapsed ? 'center' : 'space-between',
+                        padding: isCollapsed ? '12px 0' : '12px 14px',
+                        cursor: 'pointer',
+                        background: showUserMenu ? 'rgba(255,255,255,0.05)' : 'transparent',
+                        transition: 'background 0.15s'
+                    }}
+                    onMouseEnter={e => { if (!showUserMenu) e.currentTarget.style.background = 'rgba(255,255,255,0.04)' }}
+                    onMouseLeave={e => { if (!showUserMenu) e.currentTarget.style.background = 'transparent' }}
+                >
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '10px', overflow: 'hidden' }}>
+                        <img
+                            src={user?.photoURL || `https://ui-avatars.com/api/?name=${user?.email || 'User'}&background=3b82f6&color=000`}
+                            alt="avatar"
+                            style={{ width: '32px', height: '32px', borderRadius: '50%', objectFit: 'cover', border: '2px solid var(--accent)', flexShrink: 0 }}
+                        />
+                        {!isCollapsed && (
+                            <div style={{ overflow: 'hidden' }}>
+                                <div style={{ fontWeight: '600', fontSize: '13px', color: 'var(--text)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                                    {user?.displayName || user?.email?.split('@')[0] || 'User'}
+                                </div>
+                                <div style={{ fontSize: '11px', color: 'var(--text-secondary)' }}>Free plan</div>
+                            </div>
+                        )}
+                    </div>
+                    {!isCollapsed && (
+                        <ChevronUp size={14} strokeWidth={2} style={{
+                            color: 'var(--text-secondary)', flexShrink: 0,
+                            transform: showUserMenu ? 'rotate(180deg)' : 'none',
+                            transition: 'transform 0.2s'
+                        }} />
+                    )}
+                </div>
+            </div>
+        </div>
     )
 }
 

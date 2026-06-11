@@ -2,8 +2,9 @@
 // Gọi Gemini với retry tự động khi gặp 503/429
 
 const MODELS = [
-    'gemini-2.5-flash',
-    'gemini-1.5-flash',
+    'gemini-2.5-flash-preview-05-20',
+    'gemini-2.0-flash',
+    'gemini-1.5-flash-latest',
 ]
 
 const delay = (ms) => new Promise(res => setTimeout(res, ms))
@@ -29,7 +30,7 @@ export async function callGemini(key, body, maxRetries = 2) {
 
                 if (res.status === 503 || res.status === 429) {
                     // Overloaded — chờ rồi thử lại
-                    const waitMs = 1500 * (attempt + 1)
+                    const waitMs = 3000 * (attempt + 1)
                     console.warn(`Gemini ${model} trả về ${res.status}, thử lại sau ${waitMs}ms...`)
                     await delay(waitMs)
                     lastError = new Error(`Gemini ${res.status}`)
