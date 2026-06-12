@@ -3,7 +3,7 @@ import { useApp } from '../context/AppContext'
 import { useAuth } from '../context/AuthContext'
 import { useFood } from '../context/FoodContext'
 import { db } from '../firebase'
-import { collection, getDocs, query, orderBy } from 'firebase/firestore'
+import { collection, query, orderBy, onSnapshot } from 'firebase/firestore'
 import { User } from 'lucide-react'
 
 const MUC_TIEU_OPTIONS = ['Tăng cơ', 'Giảm mỡ', 'Tăng cơ/Giảm mỡ', 'Tăng sức bền']
@@ -55,24 +55,21 @@ function Profile() {
     const [workoutLogs, setWorkoutLogs] = useState([])
     const [statsLoading, setStatsLoading] = useState(true)
 
-    // Lấy nhật ký tập từ Firestore (giống Dashboard) để tính số liệu thật
     useEffect(() => {
-        const load = async () => {
-            if (!user) {
-                setWorkoutLogs([])
-                setStatsLoading(false)
-                return
-            }
-            try {
-                const q = query(collection(db, 'users', user.uid, 'nhatky'), orderBy('ngay', 'desc'))
-                const snap = await getDocs(q)
-                setWorkoutLogs(snap.docs.map(d => ({ id: d.id, ...d.data() })))
-            } catch (e) {
-                console.error('Load nhatky error:', e)
-            }
+        if (!user) {
+            setWorkoutLogs([])
             setStatsLoading(false)
+            return
         }
-        load()
+        const q = query(collection(db, 'users', user.uid, 'nhatky'), orderBy('ngay', 'desc'))
+        const unsub = onSnapshot(q, (snap) => {
+            setWorkoutLogs(snap.docs.map(d => ({ id: d.id, ...d.data() })))
+            setStatsLoading(false)
+        }, (e) => {
+            console.error('Load nhatky error:', e)
+            setStatsLoading(false)
+        })
+        return () => unsub()
     }, [user])
 
     // Số buổi tập đã ghi nhận
@@ -81,16 +78,13 @@ function Profile() {
     // Số bữa ăn đã phân tích/ghi nhận
     const soBuaAn = foodLog.length
 
-    // Số ngày hoạt động (có ít nhất 1 buổi tập hoặc 1 bữa ăn được ghi)
     const soNgayHoatDong = (() => {
         const days = new Set()
         workoutLogs.forEach(w => {
-            const d = w.ngay?.toDate?.() ?? (w.ngay ? new Date(w.ngay) : null)
-            if (d && !isNaN(d)) days.add(d.toDateString())
+            if (w.ngay) days.add(new Date(w.ngay).toDateString())
         })
         foodLog.forEach(m => {
-            const d = m.thoiGian?.toDate?.() ?? (m.time ? new Date(m.time) : null)
-            if (d && !isNaN(d)) days.add(d.toDateString())
+            if (m._jsDate instanceof Date) days.add(m._jsDate.toDateString())
         })
         return days.size
     })()
