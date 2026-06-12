@@ -2,8 +2,9 @@ import { useState, useRef, useEffect } from 'react'
 import { Send, Sparkles, Brain } from 'lucide-react'
 import { useAuth } from '../context/AuthContext'
 import { useFood } from '../context/FoodContext'
+import { useApp } from '../context/AppContext'
 import { db } from '../firebase'
-import { doc, getDoc, setDoc, arrayUnion } from 'firebase/firestore'
+import { doc, getDoc, setDoc, arrayUnion, collection, addDoc, query, orderBy, limit, getDocs, deleteDoc } from 'firebase/firestore'
 import { callGemini } from '../utils/gemini'
 
 const GEMINI_KEY = import.meta.env.VITE_GEMINI_KEY
@@ -86,24 +87,87 @@ async function updateSessionMeta(uid, topics = []) {
     } catch (e) { console.error('Session meta error:', e) }
 }
 
+// Lưu message vào Firestore (giới hạn 50 tin nhắn gần nhất)
+async function saveChatMessage(uid, message) {
+    try {
+        const colRef = collection(db, 'users', uid, 'chatHistory')
+        await addDoc(colRef, {
+            ...message,
+            // schedule là object, cần stringify để lưu
+            schedule: message.schedule ? JSON.stringify(message.schedule) : null,
+            savedAt: new Date().toISOString(),
+        })
+        // Giữ chỉ 50 tin nhắn mới nhất — xóa cũ hơn
+        const q = query(colRef, orderBy('savedAt', 'desc'))
+        const snap = await getDocs(q)
+        if (snap.docs.length > 50) {
+            const toDelete = snap.docs.slice(50)
+            await Promise.all(toDelete.map(d => deleteDoc(d.ref)))
+        }
+    } catch (e) { console.error('Save chat error:', e) }
+}
+
+async function loadChatHistory(uid) {
+    try {
+        const q = query(
+            collection(db, 'users', uid, 'chatHistory'),
+            orderBy('savedAt', 'asc'),
+            limit(50)
+        )
+        const snap = await getDocs(q)
+        return snap.docs.map(d => {
+            const data = d.data()
+            return {
+                ...data,
+                schedule: data.schedule ? JSON.parse(data.schedule) : undefined,
+            }
+        })
+    } catch (e) { console.error('Load chat error:', e); return [] }
+}
+
 function daysSince(isoString) {
     if (!isoString) return null
     return Math.floor((Date.now() - new Date(isoString).getTime()) / (1000 * 60 * 60 * 24))
 }
 
-// Emotional memory decay — chỉ giữ mood trong vòng 30 ngày
-function getRecentMoods(emotionalMemory) {
-    return (emotionalMemory?.recentMoods || []).filter(m => {
-        const days = daysSince(m.timestamp)
-        return days !== null && days <= 30
-    })
+// Decay thông minh theo loại sự kiện
+// - mệt/stressed: 3 ngày (chuyện nhỏ, hỏi lại ngay hôm sau ok)
+// - sad/buồn chuyện cá nhân: 7 ngày (đủ để hỏi thăm mà không kỳ)
+// - heavy (chia tay, gia đình, mất mát): KHÔNG tự gợi lại, chỉ phản hồi nếu user tự nhắc
+const MOOD_DECAY_DAYS = {
+    tired: 3,
+    stressed: 3,
+    sad: 7,
+    motivated: 2,
+    happy: 2,
+    neutral: 1,
 }
 
-// lastEmotionalState chỉ còn hiệu lực nếu trong 30 ngày
+const HEAVY_CONTEXTS = ['chia tay', 'mất', 'gia đình', 'người thân', 'bệnh', 'tai nạn', 'ly hôn', 'thất nghiệp']
+
+function isHeavyContext(context = '') {
+    return HEAVY_CONTEXTS.some(k => context.toLowerCase().includes(k))
+}
+
 function getActiveEmotionalState(emotionalMemory) {
-    const days = daysSince(emotionalMemory?.lastEmotionalAt)
-    if (days === null || days > 30) return null
-    return emotionalMemory?.lastEmotionalState || null
+    const last = emotionalMemory?.lastEmotionalState
+    const lastAt = emotionalMemory?.lastEmotionalAt
+    const lastContext = emotionalMemory?.recentMoods?.slice(-1)[0]?.context || ''
+    if (!last || !lastAt) return null
+    // Heavy context → không gợi lại tự động
+    if (isHeavyContext(lastContext)) return null
+    const decay = MOOD_DECAY_DAYS[last] ?? 3
+    const days = daysSince(lastAt)
+    if (days === null || days > decay) return null
+    return last
+}
+
+function getRecentMoods(emotionalMemory) {
+    return (emotionalMemory?.recentMoods || []).filter(m => {
+        const decay = MOOD_DECAY_DAYS[m.mood] ?? 7
+        const days = daysSince(m.timestamp)
+        return days !== null && days <= decay && !isHeavyContext(m.context)
+    })
 }
 
 function buildGreeting(name, mem) {
@@ -119,24 +183,38 @@ function buildGreeting(name, mem) {
     const lastTopics = mem?.sessionMeta?.lastTopics || []
 
     if (days === null) {
-        return `Chào ${name}! Mình là AI Coach của bạn.\n\nMình nhớ bạn đang hướng tới mục tiêu **${goalText}**. Hôm nay bạn cần mình giúp gì?`
+        return `Chào ${name}! Mình là AI Coach của bạn 👋\n\nMình thấy bạn đang hướng tới mục tiêu **${goalText}** — nghe hay đấy!\n\nĐể mình tạo lịch tập phù hợp cho bạn, cho mình hỏi nhanh: **bạn muốn tập mấy buổi mỗi tuần?** (3, 4, 5 hay 6 buổi?)`
+    }
+
+    if (days >= 14) {
+        return `Ủa ${name}! Lâu quá mới thấy bạn — ${days} ngày rồi đó. Dạo này thế nào, vẫn ổn chứ?`
     }
 
     if (days >= 7) {
-        return `Chào ${name}, lâu rồi mới gặp lại — ${days} ngày rồi đó!\n\nMình vẫn nhớ bạn đang hướng tới **${goalText}**. Dạo này thế nào, có ổn không?`
+        return `Chào ${name}! Cũng lâu rồi mới gặp, ${days} ngày nha.\n\nDạo này bạn có tập không, hay đang bận?`
     }
 
     if (days >= 2) {
-        return `Chào ${name}! ${days} ngày rồi mới thấy bạn.\n\n${lastNote ? `Lần trước mình có ghi lại: "${lastNote}". ` : ''}Hôm nay bạn thế nào?`
+        const noteHint = lastNote ? `Hôm trước bạn có kể "${lastNote}" — ` : ''
+        return `Chào ${name}! ${noteHint}Hôm nay thế nào rồi?`
     }
 
-    // Chỉ nhắc mood nếu còn trong 30 ngày
-    if (lastMood === 'tired' || lastMood === 'stressed' || lastMood === 'sad') {
-        return `Chào ${name}! Hôm qua bạn có vẻ không được ổn lắm.\n\nHôm nay cảm thấy thế nào rồi? Nghỉ ngơi đủ chưa?`
+    // Hôm qua mood không ổn → hỏi thăm tự nhiên, không checklist
+    if (lastMood === 'tired') {
+        return `${name} ơi, hôm qua trông có vẻ mệt — hôm nay ngủ được không, cảm thấy đỡ hơn chưa?`
+    }
+    if (lastMood === 'stressed') {
+        return `Chào ${name}! Hôm qua bạn đang căng thẳng — hôm nay bớt chưa? Có muốn kể thêm không?`
+    }
+    if (lastMood === 'sad') {
+        return `${name} ơi, hôm nay cảm thấy thế nào rồi? Mình vẫn ở đây nha.`
+    }
+    if (lastMood === 'motivated' || lastMood === 'happy') {
+        return `Chào ${name}! Hôm qua bạn đang rất năng lượng — hôm nay tiếp tục chiến không? 💪`
     }
 
     if (lastTopics.length > 0) {
-        return `Chào ${name}! Hôm nay mình có thể giúp gì cho bạn?\n\nHôm qua mình đang nói về **${lastTopics[0]}** — bạn có muốn tiếp không?`
+        return `Chào ${name}! Hôm qua mình đang nói về **${lastTopics[0]}** — hôm nay muốn tiếp không, hay có chuyện khác?`
     }
 
     return `Chào ${name}! Hôm nay mình có thể giúp gì cho bạn?`
@@ -147,7 +225,6 @@ function buildSystemPrompt(memory, todayData) {
     const soft = memory?.softMemory || {}
     const session = memory?.sessionMeta || {}
 
-    // Chỉ dùng mood còn trong 30 ngày
     const recentMoods = getRecentMoods(memory?.emotionalMemory)
     const lastEmotionalState = getActiveEmotionalState(memory?.emotionalMemory)
 
@@ -171,10 +248,9 @@ function buildSystemPrompt(memory, todayData) {
 - Thích: ${(soft.likes || []).join(', ') || 'chưa biết'}
 - Ghi chú từ các buổi trước: ${(soft.notes || []).slice(-5).join(' | ') || 'chưa có'}`
 
-    // Emotional context — chỉ hiện nếu còn trong 30 ngày
     const emotionalText = lastEmotionalState
-        ? `\n- Tâm trạng gần đây (30 ngày): ${recentMoods.slice(-3).map(m => `${m.mood} (${m.context})`).join(', ')}`
-        : `\n- Tâm trạng: chưa có dữ liệu gần đây`
+        ? `\n- Tâm trạng gần đây: ${recentMoods.slice(-3).map(m => `${m.mood} (${m.context})`).join(', ')}`
+        : `\n- Tâm trạng: không có dữ liệu cần nhắc lại`
 
     const sessionText = `\n- Chủ đề buổi trước: ${(session.lastTopics || []).join(', ') || 'chưa có'}`
 
@@ -183,35 +259,96 @@ function buildSystemPrompt(memory, todayData) {
 - Protein: ${todayData.protein}/${todayData.goalProtein}g
 - Còn thiếu: ${Math.max(0, todayData.goalCalories - todayData.calories)} kcal` : '\n- Chưa có dữ liệu'
 
-    return `Bạn là AI Coach thể hình & dinh dưỡng cá nhân. Bạn NHỚ người dùng này và đồng hành lâu dài cùng họ.
+    return `Bạn là người bạn đồng hành — vừa là AI Coach thể hình, vừa là người lắng nghe thật sự. Mục tiêu của app này là giúp user hiểu tầm quan trọng của việc tập luyện, nhưng trước hết phải là người bạn họ muốn tâm sự.
 
-TÍNH CÁCH: Thân thiện, quan tâm, lắng nghe thật sự. Không phải chatbot — bạn là người bạn đồng hành của user.
+TÍNH CÁCH: Ấm áp, tự nhiên, không cứng nhắc. Nói như bạn bè nhắn tin — không dùng bullet point hay tiêu đề. Ngắn gọn khi phù hợp, dài hơn khi user cần được lắng nghe.
 
 [Thông tin cơ bản — nhớ mãi]${hardText}
 
 [Sở thích & thói quen]${softText}
 
-[Tâm trạng gần đây — chỉ trong 30 ngày]${emotionalText}
+[Cảm xúc gần đây]${emotionalText}
 
 [Buổi trước]${sessionText}
 
-[Hôm nay]${todayText}
+[Dinh dưỡng hôm nay]${todayText}
 
-QUY TẮC:
-1. Trả lời bằng tiếng Việt, tự nhiên như người thật
-2. NHẬN DIỆN CẢM XÚC CHỦ ĐỘNG: đọc tone của user, "oke", "hmm" cụt — có thể là dấu hiệu không ổn
-3. KHI USER ĐANG KHÔNG ỔN: lắng nghe trước, hỏi thêm, KHÔNG push lịch tập hay calo ngay
-4. KHI USER HỎI TƯ VẤN: trả lời cụ thể dựa trên thông tin của họ
-5. PROACTIVE RECALL: nhắc lại thông tin user đã chia sẻ tự nhiên — KHÔNG máy móc. Chấn thương thì nhớ mãi. Chuyện cảm xúc cũ hơn 30 ngày thì KHÔNG gợi lại
-6. Nếu user chia sẻ thông tin mới quan trọng → cuối reply thêm: [MEMORY: nội dung ngắn gọn]
-7. Nếu detect được user đang mệt/stressed/buồn → cuối reply thêm: [EMOTION: mood|lý do ngắn gọn]
-   - mood chỉ dùng: tired / stressed / sad / motivated / happy / neutral
-8. Sau mỗi reply, tóm tắt chủ đề → cuối reply thêm: [TOPIC: chủ đề ngắn gọn]
-9. Không hỏi lại những gì user đã trả lời trong onboarding`
+QUY TẮC QUAN TRỌNG:
+1. Trả lời tiếng Việt, tự nhiên như người thật nhắn tin
+2. PHÂN BIỆT 2 MODE:
+   - MODE TÂM SỰ: user buồn/mệt/stress/kể chuyện cá nhân → lắng nghe, hỏi thêm, đồng cảm. TUYỆT ĐỐI không chen lịch tập hay dinh dưỡng vào. Mục tiêu KHÔNG chỉ là nghe — sau khi nói chuyện, user phải thấy NHẸ NHÕM hơn, được THẤU HIỂU hơn lúc bắt đầu. Validate cảm xúc của họ trước (đừng vội bảo "đừng buồn nữa" hay ép tích cực), rồi mới nhẹ nhàng đưa góc nhìn khác hoặc một câu động viên thật lòng, đúng ngữ cảnh — không sáo rỗng, không giáo điều
+   - MODE TƯ VẤN: user hỏi về tập luyện/dinh dưỡng → trả lời cụ thể, có ích
+3. ĐỌC TONE: "oke", "hmm", "thôi", trả lời cụt → có thể đang không ổn, hỏi nhẹ
+4. EMOTIONAL MEMORY: chấn thương/bệnh lý nhớ mãi. Chuyện cảm xúc nặng (chia tay, mất người thân, gia đình) — KHÔNG tự gợi lại, chỉ phản hồi nếu user tự nhắc
+5. KHI CHUYỂN TỪ TÂM SỰ SANG TẬP LUYỆN: phải tự nhiên, không đột ngột. Ví dụ: "Khi nào bạn thấy sẵn sàng hơn, tập luyện cũng có thể giúp đầu óc nhẹ hơn đấy — nhưng không cần vội"
+6. Nếu user chia sẻ thông tin quan trọng → cuối reply: [MEMORY: nội dung ngắn]
+7. Nếu detect cảm xúc rõ → cuối reply: [EMOTION: mood|context ngắn]
+   - mood: tired / stressed / sad / motivated / happy / neutral
+   - context: mô tả ngắn lý do (VD: "mệt vì công việc", "buồn chuyện gia đình")
+8. Cuối reply → [TOPIC: chủ đề ngắn]
+9. Không hỏi lại những gì user đã điền trong onboarding (tuổi, cân, cao, mục tiêu...)
+10. TẠO LỊCH TẬP: Khi user trả lời muốn tập X buổi/tuần (hoặc nhắn muốn tạo lịch tập), hãy generate lịch tập JSON ngay. Format: [SCHEDULE:[{"day":"Thứ 2","group":"PUSH","exercises":[{"name":"Bench Press","sets":"4","reps":"8-10"}]}]] — JSON thuần, không markdown trong tag
+11. KHI USER CẢM ƠN / bày tỏ biết ơn (vd "cảm ơn nha", "thanks", "có bạn vui hơn nhiều"): đáp lại ấm áp, tự nhiên như bạn bè — KHÔNG dùng kiểu "Dạ, không có gì" khô khan. Có thể nói thật mình cũng vui vì giúp được, và rằng họ luôn có thể quay lại bất cứ lúc nào nếu cần tâm sự hoặc cần tập
+11. Đừng cố làm "AI hữu ích" bằng mọi giá trong lúc user đang xuống tinh thần — đôi khi câu trả lời tốt nhất chỉ là 1-2 câu ngắn cho họ thấy có người hiểu, không cần giải pháp ngay`
+}
+
+// Keywords detect yêu cầu tạo lịch tập
+const SCHEDULE_KEYWORDS = [
+    'tạo lịch tập', 'lập lịch tập', 'lịch tập cho tôi', 'lịch tập cho tao',
+    'lịch tập tuần', 'làm lịch tập', 'schedule', 'workout plan',
+    'tạo cho tôi lịch', 'tạo cho tao lịch', 'lịch tập mới',
+    'tạo lịch', 'lên lịch tập',
+]
+
+function isScheduleRequest(msg) {
+    const lower = msg.toLowerCase()
+    return SCHEDULE_KEYWORDS.some(k => lower.includes(k))
+}
+
+function WorkoutScheduleCard({ schedule }) {
+    const colors = ['var(--accent)', '#60a5fa', '#a78bfa', '#34d399', '#f59e0b', '#f97316']
+    return (
+        <div style={{ width: '100%', marginTop: '4px' }}>
+            <div style={{ fontSize: '12px', color: 'var(--text-secondary)', marginBottom: '10px', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                <span style={{ width: '8px', height: '8px', borderRadius: '50%', background: 'var(--accent)', display: 'inline-block' }} />
+                Lịch tập được tạo bởi AI
+            </div>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                {schedule.map((day, i) => (
+                    <div key={i} style={{
+                        background: 'var(--card)', border: '1px solid var(--border)',
+                        borderLeft: `3px solid ${colors[i % colors.length]}`,
+                        borderRadius: '10px', padding: '12px 14px',
+                    }}>
+                        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '8px' }}>
+                            <div style={{ fontWeight: 700, fontSize: '14px', color: 'var(--text)' }}>{day.day}</div>
+                            <div style={{
+                                fontSize: '11px', fontWeight: 600, padding: '2px 8px',
+                                borderRadius: '20px', background: `${colors[i % colors.length]}22`,
+                                color: colors[i % colors.length], border: `1px solid ${colors[i % colors.length]}44`
+                            }}>{day.group}</div>
+                        </div>
+                        <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                            {day.exercises?.map((ex, j) => (
+                                <div key={j} style={{
+                                    display: 'flex', justifyContent: 'space-between', alignItems: 'center',
+                                    fontSize: '13px', color: 'var(--text-secondary)',
+                                    padding: '4px 0', borderBottom: j < day.exercises.length - 1 ? '1px solid var(--border)' : 'none'
+                                }}>
+                                    <span style={{ color: 'var(--text)' }}>• {ex.name}</span>
+                                    <span style={{ fontSize: '12px' }}>{ex.sets} sets × {ex.reps}</span>
+                                </div>
+                            ))}
+                        </div>
+                    </div>
+                ))}
+            </div>
+        </div>
+    )
 }
 
 const QUICK_REPLIES = [
-    'Lịch tập hôm nay?',
+    'Tạo lịch tập cho tôi',
     'Gợi ý bữa ăn?',
     'Tiến độ của tôi',
     'Hôm nay mệt mỏi',
@@ -220,6 +357,7 @@ const QUICK_REPLIES = [
 export default function AICoach() {
     const { user } = useAuth()
     const { getTodayTotal, dailyGoal } = useFood()
+    const { tuoi, canNang, chieuCao, kinhNghiem, benhLy, mucTieu, soNgay } = useApp()
     const [messages, setMessages] = useState([])
     const [input, setInput] = useState('')
     const [loading, setLoading] = useState(false)
@@ -231,15 +369,28 @@ export default function AICoach() {
 
     useEffect(() => {
         if (!user) return
-        loadMemory(user.uid).then(mem => {
+        Promise.all([
+            loadMemory(user.uid),
+            loadChatHistory(user.uid),
+        ]).then(([mem, history]) => {
             setMemory(mem)
             setMemoryLoaded(true)
-
-            const name = user.displayName?.split(' ').pop() || 'bạn'
-            const greeting = buildGreeting(name, mem)
-            setMessages([{ role: 'ai', content: greeting }])
-
             updateSessionMeta(user.uid)
+
+            if (history.length > 0) {
+                // Có lịch sử chat → load lại, thêm greeting mới ở cuối
+                const name = user.displayName?.split(' ').pop() || 'bạn'
+                const greeting = buildGreeting(name, mem)
+                setMessages([...history, { role: 'ai', content: greeting }])
+                // Lưu greeting mới vào history
+                saveChatMessage(user.uid, { role: 'ai', content: greeting })
+            } else {
+                // Lần đầu → chỉ show greeting
+                const name = user.displayName?.split(' ').pop() || 'bạn'
+                const greeting = buildGreeting(name, mem)
+                setMessages([{ role: 'ai', content: greeting }])
+                saveChatMessage(user.uid, { role: 'ai', content: greeting })
+            }
         })
     }, [user])
 
@@ -252,6 +403,7 @@ export default function AICoach() {
         if (!msg || loading) return
 
         setMessages(prev => [...prev, { role: 'user', content: msg }])
+        if (user) saveChatMessage(user.uid, { role: 'user', content: msg })
         setInput('')
         setLoading(true)
 
@@ -261,6 +413,53 @@ export default function AICoach() {
             goalCalories: dailyGoal.calories,
             protein: total.protein,
             goalProtein: dailyGoal.protein,
+        }
+
+        // Nếu user muốn tạo lịch tập → gọi riêng với prompt chuyên biệt
+        if (isScheduleRequest(msg)) {
+            const bmi = (canNang && chieuCao)
+                ? (parseFloat(canNang) / Math.pow(parseFloat(chieuCao) / 100, 2)).toFixed(1)
+                : '?'
+            const schedulePrompt = `Bạn là huấn luyện viên thể hình. Tạo lịch tập cho người dùng sau:
+- Tuổi: ${tuoi || '?'}, Cân nặng: ${canNang || '?'}kg, Chiều cao: ${chieuCao || '?'}cm, BMI: ${bmi}
+- Kinh nghiệm: ${kinhNghiem || '?'}
+- Tình trạng sức khỏe: ${benhLy || 'Không có'}
+- Mục tiêu: ${mucTieu || '?'}
+- Số ngày tập: ${soNgay || '3 ngày'}
+
+Trả lời bằng tiếng Việt. Đầu tiên viết 1-2 câu giới thiệu lịch tập tự nhiên (như bạn bè nói chuyện).
+Sau đó thêm tag [SCHEDULE:JSON] với format:
+[SCHEDULE:[{"day":"Thứ 2","group":"PUSH","exercises":[{"name":"Bench Press","sets":"4","reps":"8-10"}]}]]
+
+Chỉ JSON thuần trong tag, không markdown, không giải thích thêm sau tag.`
+
+            try {
+                const data = await callGemini(GEMINI_KEY, {
+                    contents: [{ role: 'user', parts: [{ text: schedulePrompt }] }],
+                    generationConfig: { maxOutputTokens: 1200 }
+                })
+                let reply = data.candidates?.[0]?.content?.parts?.[0]?.text || ''
+                const scheduleMatch = reply.match(/\[SCHEDULE:(.*?)\]$/s)
+                if (scheduleMatch) {
+                    try {
+                        const scheduleJson = JSON.parse(scheduleMatch[1].trim())
+                        const textPart = reply.replace(/\[SCHEDULE:.*?\]$/s, '').trim()
+                        setMessages(prev => [...prev, {
+                            role: 'ai',
+                            content: textPart || 'Đây là lịch tập mình tạo cho bạn! 💪',
+                            schedule: scheduleJson
+                        }])
+                    } catch {
+                        setMessages(prev => [...prev, { role: 'ai', content: reply }])
+                    }
+                } else {
+                    setMessages(prev => [...prev, { role: 'ai', content: reply }])
+                }
+            } catch {
+                setMessages(prev => [...prev, { role: 'ai', content: 'Lỗi kết nối, thử lại nhé!' }])
+            }
+            setLoading(false)
+            return
         }
 
         const systemPrompt = buildSystemPrompt(memory, todayData)
@@ -320,7 +519,23 @@ export default function AICoach() {
                 reply = reply.replace(/\[TOPIC:.*?\]/s, '').trim()
             }
 
-            setMessages(prev => [...prev, { role: 'ai', content: reply }])
+            // Check nếu AI trả về lịch tập JSON
+            const scheduleMatch = reply.match(/\[SCHEDULE:(.+?)\]/s)
+            if (scheduleMatch) {
+                try {
+                    const scheduleJson = JSON.parse(scheduleMatch[1].trim())
+                    const textPart = reply.replace(/\[SCHEDULE:.*?\]/s, '').trim()
+                    setMessages(prev => [...prev, {
+                        role: 'ai',
+                        content: textPart || 'Đây là lịch tập mình tạo cho bạn! 💪',
+                        schedule: scheduleJson
+                    }])
+                } catch {
+                    setMessages(prev => [...prev, { role: 'ai', content: reply }])
+                }
+            } else {
+                setMessages(prev => [...prev, { role: 'ai', content: reply }])
+            }
             setApiMessages([...updatedMessages, { role: 'model', parts: [{ text: reply }] }].slice(-20))
         } catch {
             setMessages(prev => [...prev, { role: 'ai', content: 'Lỗi kết nối, thử lại nhé!' }])
@@ -379,7 +594,7 @@ export default function AICoach() {
                         justifyContent: msg.role === 'user' ? 'flex-end' : 'flex-start',
                     }}>
                         <div style={{
-                            maxWidth: '80%',
+                            maxWidth: msg.schedule ? '100%' : '80%',
                             padding: '10px 14px',
                             borderRadius: msg.role === 'user' ? '14px 14px 4px 14px' : '14px 14px 14px 4px',
                             background: msg.role === 'user' ? 'var(--accent)' : 'var(--card2)',
@@ -388,6 +603,7 @@ export default function AICoach() {
                             border: msg.role === 'user' ? 'none' : '1px solid var(--border)',
                         }}>
                             <MessageContent text={msg.content} />
+                            {msg.schedule && <WorkoutScheduleCard schedule={msg.schedule} />}
                         </div>
                     </div>
                 ))}
