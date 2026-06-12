@@ -45,10 +45,9 @@ function DinhDuong() {
         setKetQua(null)
         setAddedToLog(false)
 
-        const reader = new FileReader()
-        reader.readAsDataURL(anh)
-        reader.onload = async () => {
-            const base64 = reader.result.split(',')[1]
+        try {
+            const compressed = await compressAnh(anh)
+            const base64 = compressed.split(',')[1]
 
             const prompt = `Bạn là chuyên gia dinh dưỡng. Phân tích bữa ăn trong ảnh và trả về JSON theo đúng format sau, KHÔNG kèm markdown hay text thừa:
 {
@@ -63,26 +62,24 @@ function DinhDuong() {
   "goiY": "Gợi ý cải thiện ngắn gọn (1-2 câu)"
 }`
 
-            try {
-                const data = await callGemini(GEMINI_KEY, {
-                    contents: [{
-                        parts: [
-                            { text: prompt },
-                            { inline_data: { mime_type: anh.type, data: base64 } }
-                        ]
-                    }],
-                    generationConfig: { responseMimeType: 'application/json' }
-                })
-                const rawText = data.candidates[0].content.parts[0].text
-                const parsed = JSON.parse(rawText.replace(/```json|```/g, '').trim())
-                setKetQua(parsed)
-            } catch (error) {
-                alert('❌ ' + (error.message.includes('503') || error.message.includes('429')
-                    ? 'Gemini đang quá tải, thử lại sau vài giây nhé!'
-                    : 'Có lỗi xảy ra: ' + error.message))
-            }
-            setLoading(false)
+            const data = await callGemini(GEMINI_KEY, {
+                contents: [{
+                    parts: [
+                        { text: prompt },
+                        { inline_data: { mime_type: 'image/jpeg', data: base64 } }
+                    ]
+                }],
+                generationConfig: { responseMimeType: 'application/json' }
+            })
+            const rawText = data.candidates[0].content.parts[0].text
+            const parsed = JSON.parse(rawText.replace(/```json|```/g, '').trim())
+            setKetQua(parsed)
+        } catch (error) {
+            alert('❌ ' + (error.message.includes('503') || error.message.includes('429')
+                ? 'Gemini đang quá tải, thử lại sau vài giây nhé!'
+                : 'Có lỗi xảy ra: ' + error.message))
         }
+        setLoading(false)
     }
 
     const themVaoNhatKy = () => {
