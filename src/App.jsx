@@ -70,7 +70,7 @@ function AppLayout() {
     )
   }
 
-  if (!profileLoaded) {
+  if (!profileLoaded || onboardingDone === null) {
     return (
       <div style={{ minHeight: '100vh', background: '#09090b', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
         <div style={{ width: '28px', height: '28px', border: '2px solid rgba(255,255,255,0.1)', borderTopColor: '#e11d48', borderRadius: '50%', animation: 'spin 0.7s linear infinite' }} />
