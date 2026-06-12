@@ -36,13 +36,60 @@ export function AppProvider({ children }) {
                 const snap = await getDoc(ref)
                 if (snap.exists()) {
                     const d = snap.data()
-                    if (d.tuoi) setTuoi(d.tuoi)
+                    const hard = d.hardMemory || {}
+                    const soft = d.softMemory || {}
+
+                    // --- Cân nặng: ưu tiên field cũ, fallback hardMemory.weight ---
                     if (d.canNang) setCanNang(d.canNang)
+                    else if (hard.weight) setCanNang(hard.weight)
+
+                    // --- Chiều cao: ưu tiên field cũ, fallback hardMemory.height ---
                     if (d.chieuCao) setChieuCao(d.chieuCao)
+                    else if (hard.height) setChieuCao(hard.height)
+
+                    // --- Tuổi: field cũ (hardMemory chỉ có ageGroup dạng range, không dùng cho TDEE) ---
+                    if (d.tuoi) setTuoi(d.tuoi)
+
+                    // --- Kinh nghiệm: ưu tiên field cũ, fallback map từ softMemory.experience ---
                     if (d.kinhNghiem) setKinhNghiem(d.kinhNghiem)
+                    else if (soft.experience) {
+                        const expMap = {
+                            beginner: 'Chưa từng tập',
+                            novice: 'Dưới 1 năm',
+                            intermediate: '1-3 năm',
+                            advanced: 'Trên 3 năm',
+                        }
+                        setKinhNghiem(expMap[soft.experience] || 'Chưa từng tập')
+                    }
+
+                    // --- Bệnh lý: ưu tiên field cũ, fallback hardMemory.injuries ---
                     if (d.benhLy) setBenhLy(d.benhLy)
+                    else if (hard.injuries && hard.injuries.length > 0 && !hard.injuries.includes('none')) {
+                        const injuryMap = {
+                            back: 'Đau khớp',
+                            knee: 'Đau khớp',
+                            shoulder: 'Đau khớp',
+                            blood_pressure: 'Huyết áp cao',
+                            other: 'Khác',
+                        }
+                        setBenhLy(injuryMap[hard.injuries[0]] || 'Khác')
+                    }
+
+                    // --- Mục tiêu: ưu tiên field cũ, fallback map từ softMemory.mainGoal ---
                     if (d.mucTieu) setMucTieu(d.mucTieu)
+                    else if (soft.mainGoal) {
+                        const goalMap = {
+                            muscle_gain: 'Tăng cơ',
+                            fat_loss: 'Giảm mỡ',
+                            strength: 'Tăng sức bền',
+                            general: 'Tăng cơ/Giảm mỡ',
+                        }
+                        setMucTieu(goalMap[soft.mainGoal] || 'Tăng cơ')
+                    }
+
+                    // --- Số ngày: ưu tiên field cũ, fallback softMemory.targetFrequency ---
                     if (d.soNgay) setSoNgay(d.soNgay)
+                    else if (soft.targetFrequency) setSoNgay(`${soft.targetFrequency} ngày`)
                 }
 
                 // Load lịch tập cũ
@@ -70,12 +117,32 @@ export function AppProvider({ children }) {
     }, [user])
 
     // Wrapper setters tự động save
+    // Cân nặng & chiều cao: lưu CẢ field cũ VÀ hardMemory để AI Coach luôn đồng bộ
     const handleSetTuoi = (v) => { setTuoi(v); saveProfile({ tuoi: v }) }
-    const handleSetCanNang = (v) => { setCanNang(v); saveProfile({ canNang: v }) }
-    const handleSetChieuCao = (v) => { setChieuCao(v); saveProfile({ chieuCao: v }) }
+    const handleSetCanNang = (v) => {
+        setCanNang(v)
+        saveProfile({ canNang: v, hardMemory: { weight: v } })
+    }
+    const handleSetChieuCao = (v) => {
+        setChieuCao(v)
+        saveProfile({ chieuCao: v, hardMemory: { height: v } })
+    }
     const handleSetKinhNghiem = (v) => { setKinhNghiem(v); saveProfile({ kinhNghiem: v }) }
     const handleSetBenhLy = (v) => { setBenhLy(v); saveProfile({ benhLy: v }) }
-    const handleSetMucTieu = (v) => { setMucTieu(v); saveProfile({ mucTieu: v }) }
+    const handleSetMucTieu = (v) => {
+        setMucTieu(v)
+        // map ngược về softMemory.mainGoal cho AI Coach
+        const reverseGoalMap = {
+            'Tăng cơ': 'muscle_gain',
+            'Giảm mỡ': 'fat_loss',
+            'Tăng sức bền': 'strength',
+            'Tăng cơ/Giảm mỡ': 'general',
+        }
+        saveProfile({
+            mucTieu: v,
+            softMemory: { mainGoal: reverseGoalMap[v] || 'general' }
+        })
+    }
     const handleSetSoNgay = (v) => { setSoNgay(v); saveProfile({ soNgay: v }) }
 
     // Lưu lịch tập theo uid để không bị lẫn

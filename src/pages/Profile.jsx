@@ -1,6 +1,9 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useApp } from '../context/AppContext'
 import { useAuth } from '../context/AuthContext'
+import { useFood } from '../context/FoodContext'
+import { db } from '../firebase'
+import { collection, getDocs, query, orderBy } from 'firebase/firestore'
 import { User } from 'lucide-react'
 
 const MUC_TIEU_OPTIONS = ['Tăng cơ', 'Giảm mỡ', 'Tăng cơ/Giảm mỡ', 'Tăng sức bền']
@@ -47,6 +50,50 @@ function Profile() {
         benhLy, setBenhLy,
         mucTieu, setMucTieu,
     } = useApp()
+    const { foodLog } = useFood()
+
+    const [workoutLogs, setWorkoutLogs] = useState([])
+    const [statsLoading, setStatsLoading] = useState(true)
+
+    // Lấy nhật ký tập từ Firestore (giống Dashboard) để tính số liệu thật
+    useEffect(() => {
+        const load = async () => {
+            if (!user) {
+                setWorkoutLogs([])
+                setStatsLoading(false)
+                return
+            }
+            try {
+                const q = query(collection(db, 'users', user.uid, 'nhatky'), orderBy('ngay', 'desc'))
+                const snap = await getDocs(q)
+                setWorkoutLogs(snap.docs.map(d => ({ id: d.id, ...d.data() })))
+            } catch (e) {
+                console.error('Load nhatky error:', e)
+            }
+            setStatsLoading(false)
+        }
+        load()
+    }, [user])
+
+    // Số buổi tập đã ghi nhận
+    const soBuoiTap = workoutLogs.length
+
+    // Số bữa ăn đã phân tích/ghi nhận
+    const soBuaAn = foodLog.length
+
+    // Số ngày hoạt động (có ít nhất 1 buổi tập hoặc 1 bữa ăn được ghi)
+    const soNgayHoatDong = (() => {
+        const days = new Set()
+        workoutLogs.forEach(w => {
+            const d = w.ngay?.toDate?.() ?? (w.ngay ? new Date(w.ngay) : null)
+            if (d && !isNaN(d)) days.add(d.toDateString())
+        })
+        foodLog.forEach(m => {
+            const d = m.thoiGian?.toDate?.() ?? (m.time ? new Date(m.time) : null)
+            if (d && !isNaN(d)) days.add(d.toDateString())
+        })
+        return days.size
+    })()
 
     const bmi = tinhBMI(canNang, chieuCao)
     const bmiInfo = phanLoaiBMI(bmi)
@@ -145,11 +192,11 @@ function Profile() {
                                 color: 'var(--accent)'
                             }}
                         >
-                            12
+                            {statsLoading ? '…' : soBuoiTap}
                         </div>
 
                         <div style={{ color: 'var(--text-secondary)' }}>
-                            Lịch tập đã tạo
+                            Buổi tập đã ghi
                         </div>
                     </div>
 
@@ -168,11 +215,11 @@ function Profile() {
                                 color: '#60a5fa'
                             }}
                         >
-                            35
+                            {soBuaAn}
                         </div>
 
                         <div style={{ color: 'var(--text-secondary)' }}>
-                            Bữa ăn phân tích
+                            Bữa ăn đã ghi
                         </div>
                     </div>
 
@@ -191,7 +238,7 @@ function Profile() {
                                 color: '#f59e0b'
                             }}
                         >
-                            18
+                            {statsLoading ? '…' : soNgayHoatDong}
                         </div>
 
                         <div style={{ color: 'var(--text-secondary)' }}>
