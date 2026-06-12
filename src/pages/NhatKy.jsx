@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react'
 import { db } from '../firebase'
 import { useAuth } from '../context/AuthContext'
-import { collection, addDoc, getDocs, deleteDoc, doc, query, orderBy, serverTimestamp } from 'firebase/firestore'
+import { collection, addDoc, deleteDoc, doc, query, orderBy, serverTimestamp, onSnapshot } from 'firebase/firestore'
 import { BookOpen, Plus, X, Save, Trash2, Calendar, MessageSquare, Dumbbell } from 'lucide-react'
 
 const BAI_TAP_GOM = [
@@ -21,17 +21,17 @@ function NhatKy() {
     const [saving, setSaving] = useState(false)
     const colRef = collection(db, 'users', user.uid, 'nhatky')
 
-    useEffect(() => { fetchData() }, [])
-
-    const fetchData = async () => {
-        setLoading(true)
-        try {
-            const q = query(colRef, orderBy('thoiGian', 'desc'))
-            const snap = await getDocs(q)
+    useEffect(() => {
+        const q = query(colRef, orderBy('thoiGian', 'desc'))
+        const unsub = onSnapshot(q, (snap) => {
             setBuoiTap(snap.docs.map(d => ({ id: d.id, ...d.data() })))
-        } catch (e) { console.error(e) }
-        setLoading(false)
-    }
+            setLoading(false)
+        }, (e) => {
+            console.error(e)
+            setLoading(false)
+        })
+        return () => unsub()
+    }, [])
 
     const themBaiTap = () => setBaiTaps([...baiTaps, { ten: '', sets: '', reps: '', kg: '' }])
     const xoaBaiTap = (i) => setBaiTaps(baiTaps.filter((_, idx) => idx !== i))
@@ -46,7 +46,6 @@ function NhatKy() {
             setBaiTaps([{ ten: '', sets: '', reps: '', kg: '' }])
             setGhiChu('')
             setNgay(new Date().toISOString().split('T')[0])
-            await fetchData()
         } catch (e) { alert('Lỗi lưu dữ liệu!') }
         setSaving(false)
     }
@@ -54,7 +53,6 @@ function NhatKy() {
     const xoaBuoi = async (id) => {
         if (!confirm('Xóa buổi tập này?')) return
         await deleteDoc(doc(db, 'users', user.uid, 'nhatky', id))
-        await fetchData()
     }
 
     const formatNgay = (str) => { if (!str) return ''; const [y, m, d] = str.split('-'); return `${d}/${m}/${y}` }
