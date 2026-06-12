@@ -53,8 +53,8 @@ function Dashboard() {
     // Tính macro theo từng ngày trong 7 ngày
     const weeklyData = days.map(day => {
         const dayMeals = foodLog.filter(m => {
-            const mDate = m.thoiGian?.toDate?.() ?? new Date(m.time ?? 0)
-            return isSameDay(mDate, day)
+            const mDate = m._jsDate
+            return mDate instanceof Date && isSameDay(mDate, day)
         })
         return {
             label: formatDay(day),
