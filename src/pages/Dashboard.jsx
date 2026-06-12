@@ -3,7 +3,7 @@ import { useAuth } from '../context/AuthContext'
 import { useFood } from '../context/FoodContext'
 import { useApp } from '../context/AppContext'
 import { db } from '../firebase'
-import { collection, getDocs, query, orderBy } from 'firebase/firestore'
+import { collection, query, orderBy, onSnapshot } from 'firebase/firestore'
 import { TrendingUp, Flame, Target, Award, Calendar } from 'lucide-react'
 
 // Lấy 7 ngày gần nhất
@@ -34,20 +34,18 @@ function Dashboard() {
 
     const days = getLast7Days()
 
-    // Load nhật ký tập từ Firestore
+    // Load nhật ký tập từ Firestore (realtime)
     useEffect(() => {
         if (!user) return
-        const load = async () => {
-            try {
-                const q = query(collection(db, 'users', user.uid, 'nhatky'), orderBy('ngay', 'desc'))
-                const snap = await getDocs(q)
-                setWorkoutLogs(snap.docs.map(d => ({ id: d.id, ...d.data() })))
-            } catch (e) {
-                console.error(e)
-            }
+        const q = query(collection(db, 'users', user.uid, 'nhatky'), orderBy('ngay', 'desc'))
+        const unsub = onSnapshot(q, (snap) => {
+            setWorkoutLogs(snap.docs.map(d => ({ id: d.id, ...d.data() })))
             setLoading(false)
-        }
-        load()
+        }, (e) => {
+            console.error(e)
+            setLoading(false)
+        })
+        return () => unsub()
     }, [user])
 
     // Tính macro theo từng ngày trong 7 ngày
