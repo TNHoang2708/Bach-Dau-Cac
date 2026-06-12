@@ -85,10 +85,6 @@ Chỉ JSON.
             var result = JSON.parse(clean);
 
             setKetQua(result);
-            localStorage.setItem(
-                "lichTap",
-                JSON.stringify(result)
-            )
 
         } catch (error) {
             setKetQua("Có lỗi xảy ra: " + error.message);
