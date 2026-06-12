@@ -73,12 +73,16 @@ export function FoodProvider({ children }) {
         const q = query(colRef, orderBy('thoiGian', 'desc'))
 
         const unsub = onSnapshot(q, (snap) => {
-            const data = snap.docs.map(d => ({
-                id: d.id,
-                ...d.data(),
-                // Convert Firestore Timestamp → JS Date string để dùng như cũ
-                time: d.data().thoiGian?.toDate?.()?.toLocaleString('vi-VN') ?? d.data().time ?? ''
-            }))
+            const data = snap.docs.map(d => {
+                const raw = d.data()
+                const jsDate = raw.thoiGian?.toDate?.() ?? null
+                return {
+                    id: d.id,
+                    ...raw,
+                    _jsDate: jsDate, // JS Date object, dùng để so sánh ngày chính xác
+                    time: jsDate?.toLocaleString('vi-VN') ?? raw.time ?? ''
+                }
+            })
             setFoodLog(data)
             setLoadingFood(false)
         }, (err) => {
@@ -109,9 +113,8 @@ export function FoodProvider({ children }) {
     const getTodayTotal = () => {
         const today = new Date().toDateString()
         const todayMeals = foodLog.filter(m => {
-            // time là string vi-VN locale, cần parse lại
-            const d = new Date(m.thoiGian?.toDate?.() ?? m.time ?? 0)
-            return d.toDateString() === today
+            const d = m._jsDate
+            return d instanceof Date && d.toDateString() === today
         })
         const total = { calories: 0, protein: 0, carbs: 0, fat: 0 }
         todayMeals.forEach(meal => {
@@ -137,8 +140,8 @@ export function FoodProvider({ children }) {
     const getTodayMeals = () => {
         const today = new Date().toDateString()
         return foodLog.filter(m => {
-            const d = new Date(m.thoiGian?.toDate?.() ?? m.time ?? 0)
-            return d.toDateString() === today
+            const d = m._jsDate
+            return d instanceof Date && d.toDateString() === today
         })
     }
 
